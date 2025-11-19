@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Success - LedgerApp_v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+      <div class="mb-4">
+        <svg
+          class="mx-auto h-12 w-12 text-green-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Login Successful!</h1>
+      <p class="text-gray-600 mb-6">Redirecting to dashboard...</p>
+      <div
+        id="token-display"
+        class="hidden mb-4 p-3 bg-gray-100 rounded text-xs break-all"
+      >
+        <strong>Token:</strong> <span id="token-value"></span>
+      </div>
+    </div>
+
+    <script>
+      // Get token from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get("token");
+
+      if (token) {
+        // Store token in localStorage
+        localStorage.setItem("token", token);
+
+        // Show token (for development - remove in production)
+        document.getElementById("token-value").textContent = token;
+        document.getElementById("token-display").classList.remove("hidden");
+
+        // Redirect to dashboard after 2 seconds
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 2000);
+      } else {
+        document.querySelector(".text-gray-600").textContent =
+          "No token received. Please try logging in again.";
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      }
+    </script>
+  </body>
+</html>

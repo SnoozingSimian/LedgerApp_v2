@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transactions - LedgerApp_v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center space-x-8">
+            <h1 class="text-xl font-bold text-gray-900">LedgerApp</h1>
+            <div class="hidden md:flex space-x-4">
+              <a
+                href="/dashboard"
+                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >Dashboard</a
+              >
+              <a
+                href="/transactions"
+                class="bg-gray-100 text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >Transactions</a
+              >
+              <a
+                href="/budgets"
+                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >Budgets</a
+              >
+              <a
+                href="/analytics"
+                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >Analytics</a
+              >
+            </div>
+          </div>
+          <div class="flex items-center">
+            <span id="user-email" class="text-sm text-gray-700 mr-4"></span>
+            <button
+              id="logout-btn"
+              class="text-sm text-red-600 hover:text-red-500"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <!-- Header with Add Button -->
+      <div class="px-4 sm:px-0 mb-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-3xl font-bold text-gray-900">Transactions</h2>
+            <p class="mt-1 text-sm text-gray-600">
+              Track your income and expenses
+            </p>
+          </div>
+          <button
+            onclick="openAddModal()"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add Transaction
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div id="summary-cards" class="px-4 sm:px-0 mb-6">
+        <!-- Will be loaded via htmx -->
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white rounded-lg shadow mb-6 p-4">
+        <form id="filter-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Start Date</label
+            >
+            <input
+              type="date"
+              name="start_date"
+              id="start_date"
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >End Date</label
+            >
+            <input
+              type="date"
+              name="end_date"
+              id="end_date"
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Type</label
+            >
+            <select
+              name="transaction_type"
+              id="transaction_type"
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Category</label
+            >
+            <select
+              name="category_id"
+              id="category_id"
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All Categories</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Search</label
+            >
+            <input
+              type="text"
+              name="search"
+              id="search"
+              placeholder="Search payee, notes..."
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div class="md:col-span-2 flex items-end gap-2">
+            <button
+              type="button"
+              onclick="applyFilters()"
+              class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Apply Filters
+            </button>
+            <button
+              type="button"
+              onclick="clearFilters()"
+              class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Clear
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Transactions List -->
+      <div class="bg-white rounded-lg shadow">
+        <div id="transactions-list" class="divide-y divide-gray-200">
+          <!-- Will be loaded via htmx -->
+          <div class="p-8 text-center text-gray-500">
+            <p>Loading transactions...</p>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="px-4 py-3 border-t border-gray-200">
+          <!-- Will be loaded via htmx -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Add/Edit Transaction Modal -->
+    <div
+      id="transaction-modal"
+      class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+    >
+      <div
+        class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h3 id="modal-title" class="text-xl font-semibold text-gray-900">
+            Add Transaction
+          </h3>
+          <button
+            onclick="closeModal()"
+            class="text-gray-400 hover:text-gray-500"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <form id="transaction-form" class="space-y-4">
+          <input type="hidden" id="transaction-id" />
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Type *</label
+              >
+              <select
+                id="form-transaction-type"
+                name="transaction_type"
+                required
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Amount *</label
+              >
+              <input
+                type="number"
+                id="form-amount"
+                name="amount"
+                step="0.01"
+                min="0.01"
+                required
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Category *</label
+              >
+              <select
+                id="form-category"
+                name="category_id"
+                required
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="">Select category</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Payment Method *</label
+              >
+              <select
+                id="form-payment-method"
+                name="payment_method"
+                required
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="cash">Cash</option>
+                <option value="credit_card">Credit Card</option>
+                <option value="debit_card">Debit Card</option>
+                <option value="upi">UPI</option>
+                <option value="neft">NEFT</option>
+                <option value="imps">IMPS</option>
+                <option value="rtgs">RTGS</option>
+                <option value="cheque">Cheque</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Date *</label
+              >
+              <input
+                type="date"
+                id="form-date"
+                name="t_date"
+                required
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Payee</label
+              >
+              <input
+                type="text"
+                id="form-payee"
+                name="payee"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="e.g., Amazon, Grocery Store"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Notes</label
+            >
+            <textarea
+              id="form-notes"
+              name="notes"
+              rows="3"
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="Additional details..."
+            ></textarea>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onclick="closeModal()"
+              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              id="submit-btn"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Save Transaction
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "/api";
+      let token = localStorage.getItem("token");
+      let currentPage = 1;
+      let categories = [];
+
+      // Check authentication
+      if (!token) {
+        window.location.href = "/login";
+      }
+
+      // Set today's date as default
+      document.getElementById("form-date").valueAsDate = new Date();
+
+      // Load user info
+      async function loadUserInfo() {
+        try {
+          const response = await fetch(`${API_BASE}/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const user = await response.json();
+            document.getElementById("user-email").textContent = user.email;
+          } else {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+          }
+        } catch (error) {
+          console.error("Error loading user:", error);
+        }
+      }
+
+      // Load categories
+      async function loadCategories() {
+        try {
+          const response = await fetch(
+            `${API_BASE}/transactions/categories/list`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (response.ok) {
+            categories = await response.json();
+            console.log("Loaded categories:", categories); // Debug
+            updateCategoryDropdowns();
+            // Trigger initial filter for expense (default type)
+            updateFormCategories("expense");
+          }
+        } catch (error) {
+          console.error("Error loading categories:", error);
+        }
+      }
+
+      function updateCategoryDropdowns() {
+        const filterSelect = document.getElementById("category_id");
+
+        // Update filter dropdown with ALL categories
+        filterSelect.innerHTML = '<option value="">All Categories</option>';
+
+        categories.forEach((cat) => {
+          const filterOption = new Option(
+            `${cat.icon || ""} ${cat.name}`,
+            cat.id
+          );
+          filterSelect.add(filterOption);
+        });
+      }
+
+      function updateFormCategories(type) {
+        const formSelect = document.getElementById("form-category");
+        formSelect.innerHTML = '<option value="">Select category</option>';
+
+        console.log("Filtering categories for type:", type); // Debug
+        const filtered = categories.filter((cat) => cat.category_type === type);
+        console.log("Filtered categories:", filtered); // Debug
+
+        if (filtered.length === 0) {
+          console.warn("No categories found for type:", type);
+          formSelect.innerHTML =
+            '<option value="">No categories available</option>';
+          return;
+        }
+
+        filtered.forEach((cat) => {
+          const option = new Option(`${cat.icon || ""} ${cat.name}`, cat.id);
+          formSelect.add(option);
+        });
+      }
+
+      // Filter categories by type in form
+      document
+        .getElementById("form-transaction-type")
+        .addEventListener("change", (e) => {
+          const type = e.target.value;
+          updateFormCategories(type);
+        });
+
+      // Load transactions
+      async function loadTransactions(page = 1) {
+        currentPage = page;
+        const params = new URLSearchParams({ page, page_size: 20 });
+
+        // Add filters
+        const form = document.getElementById("filter-form");
+        const formData = new FormData(form);
+        for (let [key, value] of formData.entries()) {
+          if (value) params.append(key, value);
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/transactions?${params}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            displayTransactions(data);
+          }
+        } catch (error) {
+          console.error("Error loading transactions:", error);
+        }
+      }
+
+      function displayTransactions(data) {
+        const container = document.getElementById("transactions-list");
+
+        if (data.transactions.length === 0) {
+          container.innerHTML = `
+                    <div class="p-8 text-center text-gray-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p class="mt-2">No transactions found</p>
+                        <p class="text-sm">Try adjusting your filters or add a new transaction</p>
+                    </div>
+                `;
+          return;
+        }
+
+        container.innerHTML = data.transactions
+          .map(
+            (t) => `
+                <div class="p-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4 flex-1">
+                            <div class="text-2xl">${
+                              t.category.icon || "📝"
+                            }</div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-medium text-gray-900">${
+                                      t.category.name
+                                    }</p>
+                                    ${
+                                      t.payee
+                                        ? `<span class="text-xs text-gray-500">• ${t.payee}</span>`
+                                        : ""
+                                    }
+                                </div>
+                                <p class="text-xs text-gray-500">${new Date(
+                                  t.t_date
+                                ).toLocaleDateString()} • ${formatPaymentMethod(
+              t.payment_method
+            )}</p>
+                                ${
+                                  t.notes
+                                    ? `<p class="text-xs text-gray-600 mt-1">${t.notes}</p>`
+                                    : ""
+                                }
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <p class="text-lg font-semibold ${
+                                  t.transaction_type === "income"
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }">
+                                    ${
+                                      t.transaction_type === "income"
+                                        ? "+"
+                                        : "-"
+                                    }${t.currency} ${parseFloat(
+              t.amount
+            ).toFixed(2)}
+                                </p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="editTransaction(${t.id})" 
+                                        class="text-blue-600 hover:text-blue-800 p-1">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="deleteTransaction(${t.id})"
+                                        class="text-red-600 hover:text-red-800 p-1">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+          )
+          .join("");
+
+        // Update pagination
+        displayPagination(data);
+      }
+
+      function displayPagination(data) {
+        const container = document.getElementById("pagination");
+        const pages = [];
+
+        for (let i = 1; i <= data.total_pages; i++) {
+          if (
+            i === 1 ||
+            i === data.total_pages ||
+            (i >= data.page - 1 && i <= data.page + 1)
+          ) {
+            pages.push(i);
+          } else if (pages[pages.length - 1] !== "...") {
+            pages.push("...");
+          }
+        }
+
+        container.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <p class="text-sm text-gray-700">
+                        Showing ${
+                          (data.page - 1) * data.page_size + 1
+                        } to ${Math.min(
+          data.page * data.page_size,
+          data.total
+        )} of ${data.total} transactions
+                    </p>
+                    <div class="flex gap-1">
+                        <button onclick="loadTransactions(${data.page - 1})" 
+                                ${data.page === 1 ? "disabled" : ""}
+                                class="px-3 py-1 rounded-md ${
+                                  data.page === 1
+                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                                }">
+                            Previous
+                        </button>
+                        ${pages
+                          .map((p) =>
+                            p === "..."
+                              ? `<span class="px-3 py-1">...</span>`
+                              : `<button onclick="loadTransactions(${p})" 
+                                    class="px-3 py-1 rounded-md ${
+                                      p === data.page
+                                        ? "bg-blue-600 text-white"
+                                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                                    }">
+                                ${p}
+                            </button>`
+                          )
+                          .join("")}
+                        <button onclick="loadTransactions(${data.page + 1})"
+                                ${
+                                  data.page === data.total_pages
+                                    ? "disabled"
+                                    : ""
+                                }
+                                class="px-3 py-1 rounded-md ${
+                                  data.page === data.total_pages
+                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                                }">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            `;
+      }
+
+      // Load summary
+      async function loadSummary() {
+        const params = new URLSearchParams();
+        const form = document.getElementById("filter-form");
+        const formData = new FormData(form);
+
+        if (formData.get("start_date"))
+          params.append("start_date", formData.get("start_date"));
+        if (formData.get("end_date"))
+          params.append("end_date", formData.get("end_date"));
+
+        try {
+          const response = await fetch(
+            `${API_BASE}/transactions/stats/summary?${params}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            displaySummary(data);
+          }
+        } catch (error) {
+          console.error("Error loading summary:", error);
+        }
+      }
+
+      function displaySummary(data) {
+        const container = document.getElementById("summary-cards");
+        container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Total Income</p>
+                                <p class="text-2xl font-bold text-green-600 mt-2">₹${data.total_income.toFixed(
+                                  2
+                                )}</p>
+                                <p class="text-xs text-gray-500 mt-1">${
+                                  data.income_count
+                                } transactions</p>
+                            </div>
+                            <div class="bg-green-100 rounded-full p-3">
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Total Expenses</p>
+                                <p class="text-2xl font-bold text-red-600 mt-2">₹${data.total_expenses.toFixed(
+                                  2
+                                )}</p>
+                                <p class="text-xs text-gray-500 mt-1">${
+                                  data.expense_count
+                                } transactions</p>
+                            </div>
+                            <div class="bg-red-100 rounded-full p-3">
+                                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Net Savings</p>
+                                <p class="text-2xl font-bold ${
+                                  data.net_savings >= 0
+                                    ? "text-blue-600"
+                                    : "text-orange-600"
+                                } mt-2">
+                                    ₹${data.net_savings.toFixed(2)}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">${
+                                  data.total_transactions
+                                } total transactions</p>
+                            </div>
+                            <div class="bg-blue-100 rounded-full p-3">
+                                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0h2a2 2 0 012 2v10m-6 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+      }
+
+      // Modal functions
+      function openAddModal() {
+        document.getElementById("modal-title").textContent = "Add Transaction";
+        document.getElementById("transaction-form").reset();
+        document.getElementById("transaction-id").value = "";
+        document.getElementById("form-date").valueAsDate = new Date();
+        document.getElementById("submit-btn").textContent = "Save Transaction";
+
+        // Set default type to expense and load its categories
+        document.getElementById("form-transaction-type").value = "expense";
+        updateFormCategories("expense");
+
+        document.getElementById("transaction-modal").classList.remove("hidden");
+      }
+
+      function closeModal() {
+        document.getElementById("transaction-modal").classList.add("hidden");
+      }
+
+      async function editTransaction(id) {
+        try {
+          const response = await fetch(`${API_BASE}/transactions/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (response.ok) {
+            const transaction = await response.json();
+
+            document.getElementById("modal-title").textContent =
+              "Edit Transaction";
+            document.getElementById("transaction-id").value = transaction.id;
+            document.getElementById("form-transaction-type").value =
+              transaction.transaction_type;
+            document
+              .getElementById("form-transaction-type")
+              .dispatchEvent(new Event("change"));
+
+            setTimeout(() => {
+              document.getElementById("form-amount").value = transaction.amount;
+              document.getElementById("form-category").value =
+                transaction.category_id;
+              document.getElementById("form-payment-method").value =
+                transaction.payment_method;
+
+              // Convert date to string if it's an object
+              if (transaction.t_date) {
+                if (typeof transaction.t_date === "string") {
+                  document.getElementById("form-date").value =
+                    transaction.t_date;
+                } else if (transaction.t_date.year) {
+                  // Date is an object like {year: 2025, month: 11, day: 17}
+                  const dateStr = `${transaction.t_date.year}-${String(
+                    transaction.t_date.month
+                  ).padStart(2, "0")}-${String(transaction.t_date.day).padStart(
+                    2,
+                    "0"
+                  )}`;
+                  document.getElementById("form-date").value = dateStr;
+                }
+              }
+
+              document.getElementById("form-payee").value =
+                transaction.payee || "";
+              document.getElementById("form-notes").value =
+                transaction.notes || "";
+            }, 100);
+
+            document.getElementById("submit-btn").textContent =
+              "Update Transaction";
+            document
+              .getElementById("transaction-modal")
+              .classList.remove("hidden");
+          }
+        } catch (error) {
+          console.error("Error loading transaction:", error);
+          alert("Failed to load transaction");
+        }
+      }
+
+      async function deleteTransaction(id) {
+        if (!confirm("Are you sure you want to delete this transaction?"))
+          return;
+
+        try {
+          const response = await fetch(`${API_BASE}/transactions/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (response.ok) {
+            loadTransactions(currentPage);
+            loadSummary();
+          } else {
+            alert("Failed to delete transaction");
+          }
+        } catch (error) {
+          console.error("Error deleting transaction:", error);
+          alert("Failed to delete transaction");
+        }
+      }
+
+      // Form submission
+      document
+        .getElementById("transaction-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const formData = new FormData(e.target);
+          const transactionId = document.getElementById("transaction-id").value;
+          const isUpdate = !!transactionId;
+
+          // Build data object
+          const data = {
+            transaction_type: formData.get("transaction_type"),
+            amount: parseFloat(formData.get("amount")),
+            category_id: parseInt(formData.get("category_id")),
+            payment_method: formData.get("payment_method"),
+            t_date: formData.get("t_date"),
+            currency: "INR",
+          };
+
+          // Add optional fields - handle empty strings
+          const payee = formData.get("payee");
+          if (payee && payee.trim()) {
+            data.payee = payee.trim();
+          } else if (isUpdate) {
+            // Explicitly set to null on update if field is empty
+            data.payee = null;
+          }
+
+          const notes = formData.get("notes");
+          if (notes && notes.trim()) {
+            data.notes = notes.trim();
+          } else if (isUpdate) {
+            // Explicitly set to null on update if field is empty
+            data.notes = null;
+          }
+
+          console.log("Submitting data:", data); // Debug
+          console.log("Is update:", isUpdate); // Debug
+
+          try {
+            const url = transactionId
+              ? `${API_BASE}/transactions/${transactionId}`
+              : `${API_BASE}/transactions`;
+            const method = transactionId ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+              method: method,
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            if (response.ok) {
+              closeModal();
+              loadTransactions(currentPage);
+              loadSummary();
+            } else {
+              const error = await response.json();
+              console.error("Server error:", error); // Debug
+
+              // Better error message handling
+              let errorMsg = "Failed to save transaction";
+              if (error.detail) {
+                if (Array.isArray(error.detail)) {
+                  errorMsg +=
+                    ":\n" +
+                    error.detail
+                      .map((e) => `- ${e.msg} (${e.loc.join(".")})`)
+                      .join("\n");
+                } else {
+                  errorMsg += ": " + error.detail;
+                }
+              }
+              alert(errorMsg);
+            }
+          } catch (error) {
+            console.error("Error saving transaction:", error);
+            alert("Failed to save transaction: " + error.message);
+          }
+        });
+
+      // Filter functions
+      function applyFilters() {
+        loadTransactions(1);
+        loadSummary();
+      }
+
+      function clearFilters() {
+        document.getElementById("filter-form").reset();
+        loadTransactions(1);
+        loadSummary();
+      }
+
+      // Utility functions
+      function formatPaymentMethod(method) {
+        return method
+          .split("_")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ");
+      }
+
+      // Logout
+      document.getElementById("logout-btn").addEventListener("click", () => {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      });
+
+      // Initialize
+      loadUserInfo();
+      loadCategories();
+      loadTransactions();
+      loadSummary();
+    </script>
+  </body>
+</html>

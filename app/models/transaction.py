@@ -52,7 +52,7 @@ class Transaction(Base):
     mcc_code = Column(String(4), ForeignKey("merchant_categories.mcc_code"))
 
     # Transaction metadata
-    date = Column(Date, nullable=False, index=True)
+    t_date = Column(Date, nullable=False, index=True)
     notes = Column(Text)
 
     # Credit card specific

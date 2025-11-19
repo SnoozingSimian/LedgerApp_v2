@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logging in...</title>
+  </head>
+  <body>
+    <div
+      style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: sans-serif;
+      "
+    >
+      <div style="text-align: center">
+        <h2>Logging you in...</h2>
+        <p>Please wait...</p>
+      </div>
+    </div>
+
+    <script>
+      // Get token from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get("token");
+
+      if (token) {
+        // Save token to localStorage
+        localStorage.setItem("token", token);
+
+        // Redirect to dashboard
+        window.location.href = "/dashboard";
+      } else {
+        // No token, redirect to login
+        alert("Authentication failed");
+        window.location.href = "/login";
+      }
+    </script>
+  </body>
+</html>
