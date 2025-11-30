@@ -1,12 +1,14 @@
 # app/routers/transactions.py
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, desc
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 
+from app.utils.export import generate_transactions_xlsx
 from app.database import get_session
 from app.models.user import User
 from app.models.transaction import Transaction, TransactionTag
@@ -405,3 +407,81 @@ async def list_categories(
     categories = result.scalars().all()
 
     return categories
+
+
+@router.get("/export/xlsx")
+async def export_transactions_xlsx(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    transaction_type: Optional[str] = Query(None, pattern="^(income|expense)$"),
+    category_id: Optional[int] = None,
+    payment_method: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Export transactions as XLSX file with optional filters.
+    """
+    # Build query with same filters as list_transactions
+    query = select(Transaction).where(Transaction.user_id == current_user.id)
+
+    # Apply filters
+    if start_date:
+        query = query.where(Transaction.t_date >= start_date)
+    if end_date:
+        query = query.where(Transaction.t_date <= end_date)
+    if transaction_type:
+        query = query.where(Transaction.transaction_type == transaction_type)
+    if category_id:
+        query = query.where(Transaction.category_id == category_id)
+    if payment_method:
+        query = query.where(Transaction.payment_method == payment_method)
+    if search:
+        search_filter = or_(
+            Transaction.payee.ilike(f"%{search}%"),
+            Transaction.notes.ilike(f"%{search}%"),
+            Transaction.merchant_type.ilike(f"%{search}%"),
+        )
+        query = query.where(search_filter)
+
+    # Order by date
+    query = query.order_by(desc(Transaction.t_date), desc(Transaction.id))
+
+    # Load relationships
+    query = query.options(
+        selectinload(Transaction.category),
+        selectinload(Transaction.subcategory),
+        selectinload(Transaction.tags).selectinload(TransactionTag.tag),
+    )
+
+    # Execute query
+    result = await session.execute(query)
+    transactions = result.scalars().all()
+
+    if not transactions:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No transactions found for the given filters",
+        )
+
+    # Generate Excel file
+    excel_file = generate_transactions_xlsx(transactions)
+
+    # Generate filename with date range
+    filename = "transactions"
+    if start_date and end_date:
+        filename = f"transactions_{start_date}_{end_date}.xlsx"
+    elif start_date:
+        filename = f"transactions_from_{start_date}.xlsx"
+    elif end_date:
+        filename = f"transactions_until_{end_date}.xlsx"
+    else:
+        filename = f"transactions_{datetime.now().strftime('%Y%m%d')}.xlsx"
+
+    # Return as downloadable file
+    return StreamingResponse(
+        excel_file,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )

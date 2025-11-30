@@ -185,6 +185,28 @@
           </div>
         </form>
       </div>
+      <!-- Add this after the existing filter controls -->
+      <div class="flex justify-end mb-4">
+        <button
+          id="export-btn"
+          class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          Export to Excel
+        </button>
+      </div>
 
       <!-- Transactions List -->
       <div class="bg-white rounded-lg shadow">
@@ -646,6 +668,75 @@
             `;
       }
 
+      // Export functionality
+      document
+        .getElementById("export-btn")
+        .addEventListener("click", async () => {
+          const startDate = document.getElementById("start_date").value;
+          const endDate = document.getElementById("end_date").value;
+          const transactionType = document.getElementById("type-filter").value;
+          const categoryId = document.getElementById("category-filter").value;
+          const paymentMethod = document.getElementById(
+            "payment-method-filter"
+          ).value;
+          const search = document.getElementById("search-input").value;
+
+          // Build query parameters
+          const params = new URLSearchParams();
+          if (startDate) params.append("start_date", startDate);
+          if (endDate) params.append("end_date", endDate);
+          if (transactionType)
+            params.append("transaction_type", transactionType);
+          if (categoryId) params.append("category_id", categoryId);
+          if (paymentMethod) params.append("payment_method", paymentMethod);
+          if (search) params.append("search", search);
+
+          try {
+            const response = await fetch(
+              `/api/transactions/export/xlsx?${params.toString()}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (response.ok) {
+              // Get filename from Content-Disposition header
+              const contentDisposition = response.headers.get(
+                "Content-Disposition"
+              );
+              let filename = "transactions.xlsx";
+              if (contentDisposition) {
+                const filenameMatch =
+                  contentDisposition.match(/filename="?(.+)"?/);
+                if (filenameMatch) {
+                  filename = filenameMatch[1];
+                }
+              }
+
+              // Download file
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+
+              alert("Transactions exported successfully!");
+            } else {
+              const error = await response.json();
+              alert(`Export failed: ${error.detail || "Unknown error"}`);
+            }
+          } catch (error) {
+            console.error("Export error:", error);
+            alert("Failed to export transactions. Please try again.");
+          }
+        });
+
       // Load summary
       async function loadSummary() {
         const params = new URLSearchParams();
@@ -958,6 +1049,100 @@
       loadCategories();
       loadTransactions();
       loadSummary();
+
+      document
+        .getElementById("export-btn")
+        .addEventListener("click", async () => {
+          // Safely get filter values, defaulting to empty string if element doesn't exist
+          const startDate = document.getElementById("start_date")?.value || "";
+          const endDate = document.getElementById("end_date")?.value || "";
+          const transactionType =
+            document.getElementById("type-filter")?.value || "";
+          const categoryId =
+            document.getElementById("category-filter")?.value || "";
+          const paymentMethod =
+            document.getElementById("payment-method-filter")?.value || "";
+          const search = document.getElementById("search-input")?.value || "";
+
+          // Build query parameters - only add non-empty values
+          const params = new URLSearchParams();
+          if (startDate) params.append("start_date", startDate);
+          if (endDate) params.append("end_date", endDate);
+          if (transactionType)
+            params.append("transaction_type", transactionType);
+          if (categoryId) params.append("category_id", categoryId);
+          if (paymentMethod) params.append("payment_method", paymentMethod);
+          if (search) params.append("search", search);
+
+          try {
+            // Show loading state
+            const exportBtn = document.getElementById("export-btn");
+            const originalText = exportBtn.innerHTML;
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = `
+      <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        ircle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Exporting...
+    `;
+
+            const response = await fetch(
+              `/api/transactions/export/xlsx?${params.toString()}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (response.ok) {
+              // Get filename from Content-Disposition header
+              const contentDisposition = response.headers.get(
+                "Content-Disposition"
+              );
+              let filename = "transactions.xlsx";
+              if (contentDisposition) {
+                const filenameMatch =
+                  contentDisposition.match(/filename="?(.+)"?/);
+                if (filenameMatch) {
+                  filename = filenameMatch[1];
+                }
+              }
+
+              // Download file
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+
+              // Show success message
+              alert("✅ Transactions exported successfully!");
+            } else {
+              const error = await response.json();
+              alert(`❌ Export failed: ${error.detail || "Unknown error"}`);
+            }
+          } catch (error) {
+            console.error("Export error:", error);
+            alert("❌ Failed to export transactions. Please try again.");
+          } finally {
+            // Restore button state
+            const exportBtn = document.getElementById("export-btn");
+            exportBtn.disabled = false;
+            exportBtn.innerHTML = `
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      Export to Excel
+    `;
+          }
+        });
     </script>
   </body>
 </html>
