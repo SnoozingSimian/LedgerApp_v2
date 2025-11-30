@@ -17,6 +17,16 @@ from app.schemas.transaction import (
     CategoryResponse,
     TagResponse,
 )
+from app.schemas.budget import (
+    BudgetCreate,
+    BudgetUpdate,
+    BudgetResponse,
+    BudgetListResponse,
+    BudgetSummary,
+    BudgetCategoryAllocationCreate,
+    BudgetCategoryAllocationUpdate,
+    BudgetCategoryAllocationResponse,
+)
 
 __all__ = [
     "UserCreate",
@@ -32,4 +42,12 @@ __all__ = [
     "TransactionFilters",
     "CategoryResponse",
     "TagResponse",
+    "BudgetCreate",
+    "BudgetUpdate",
+    "BudgetResponse",
+    "BudgetListResponse",
+    "BudgetSummary",
+    "BudgetCategoryAllocationCreate",
+    "BudgetCategoryAllocationUpdate",
+    "BudgetCategoryAllocationResponse",
 ]
