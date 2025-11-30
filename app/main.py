@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 import logging
 
 from app.database import engine
-from app.routers import auth, transactions
+from app.routers import auth, transactions, budgets
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -101,3 +101,4 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(
     transactions.router, prefix="/api/transactions", tags=["Transactions"]
 )
+app.include_router(budgets.router, prefix="/api/budgets", tags=["Budgets"])
