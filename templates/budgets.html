@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Budgets - LedgerApp_v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center space-x-8">
+            <a href="/dashboard" class="text-xl font-bold text-gray-900"
+              >LedgerApp</a
+            >
+            <div class="hidden md:flex space-x-4">
+              <a
+                href="/dashboard"
+                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >Dashboard</a
+              >
+              <a
+                href="/transactions"
+                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >Transactions</a
+              >
+              <a
+                href="/budgets"
+                class="text-green-600 bg-green-50 px-3 py-2 rounded-md text-sm font-medium"
+                >Budgets</a
+              >
+            </div>
+          </div>
+          <div class="flex items-center">
+            <span id="user-email" class="text-sm text-gray-700 mr-4"></span>
+            <button
+              id="logout-btn"
+              class="text-sm text-red-600 hover:text-red-500"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="px-4 sm:px-0 mb-6">
+        <div class="flex justify-between items-center">
+          <h1 class="text-3xl font-bold text-gray-900">💰 Budgets</h1>
+          <button
+            onclick="openCreateModal()"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            + Create Budget
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Budget Overview -->
+      <div
+        id="active-budget-container"
+        hx-get="/api/budgets/active"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+        class="px-4 sm:px-0 mb-6"
+      >
+        <div class="text-center py-12 bg-white rounded-lg shadow">
+          <div class="animate-pulse text-gray-500">
+            Loading active budget...
+          </div>
+        </div>
+      </div>
+
+      <!-- Budget List -->
+      <div class="px-4 sm:px-0">
+        <div class="bg-white rounded-lg shadow">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">All Budgets</h2>
+          </div>
+          <div
+            id="budget-list-container"
+            hx-get="/api/budgets?page=1&page_size=10"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+          >
+            <div class="text-center py-12">
+              <div class="animate-pulse text-gray-500">Loading budgets...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Create/Edit Budget Modal -->
+    <div
+      id="budget-modal"
+      class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+    >
+      <div
+        class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-lg bg-white"
+      >
+        <div
+          class="flex justify-between items-center pb-3 border-b border-gray-200"
+        >
+          <h3 id="modal-title" class="text-2xl font-semibold text-gray-900">
+            Create Budget
+          </h3>
+          <button
+            onclick="closeModal()"
+            class="text-gray-400 hover:text-gray-600 text-3xl font-light"
+          >
+            &times;
+          </button>
+        </div>
+
+        <form id="budget-form" onsubmit="submitBudget(event)" class="mt-4">
+          <input type="hidden" id="budget-id" name="budget_id" />
+
+          <!-- Budget Name -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Budget Name *</label
+            >
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="e.g., January 2025 Budget"
+            />
+          </div>
+
+          <!-- Date Range -->
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >Start Date *</label
+              >
+              <input
+                type="date"
+                id="period_start"
+                name="period_start"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >End Date *</label
+              >
+              <input
+                type="date"
+                id="period_end"
+                name="period_end"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+          </div>
+
+          <!-- Total Budget -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Total Budget (₹) *</label
+            >
+            <input
+              type="number"
+              id="total_budget"
+              name="total_budget"
+              step="0.01"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="50000"
+            />
+          </div>
+
+          <!-- 50/30/20 Allocations -->
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >Needs Budget (₹)</label
+              >
+              <input
+                type="number"
+                id="needs_budget"
+                name="needs_budget"
+                step="0.01"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="25000"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >Wants Budget (₹)</label
+              >
+              <input
+                type="number"
+                id="wants_budget"
+                name="wants_budget"
+                step="0.01"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="15000"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >Savings Budget (₹)</label
+              >
+              <input
+                type="number"
+                id="savings_budget"
+                name="savings_budget"
+                step="0.01"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="10000"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >Alert Threshold (%)</label
+              >
+              <input
+                type="number"
+                id="alert_threshold_percent"
+                name="alert_threshold_percent"
+                min="1"
+                max="100"
+                value="80"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+          </div>
+
+          <!-- Category Allocations -->
+          <div class="border border-gray-300 rounded-lg p-4 mb-4">
+            <div class="flex justify-between items-center mb-3">
+              <label class="block text-sm font-medium text-gray-700"
+                >Category Allocations</label
+              >
+              <button
+                type="button"
+                onclick="addCategoryAllocation()"
+                class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm font-medium"
+              >
+                + Add Category
+              </button>
+            </div>
+            <div id="category-allocations-container" class="space-y-2"></div>
+          </div>
+
+          <!-- Error Message -->
+          <div id="form-error" class="text-red-600 text-sm mb-4"></div>
+
+          <!-- Actions -->
+          <div class="flex gap-3">
+            <button
+              type="submit"
+              class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+            >
+              Save Budget
+            </button>
+            <button
+              type="button"
+              onclick="closeModal()"
+              class="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "/api";
+      const token = localStorage.getItem("token");
+      let categories = [];
+
+      // Check authentication
+      if (!token) {
+        window.location.href = "/login";
+      }
+
+      // Set auth header for HTMX
+      document.body.addEventListener("htmx:configRequest", (event) => {
+        event.detail.headers["Authorization"] = `Bearer ${token}`;
+      });
+
+      // Load user email
+      async function loadUserEmail() {
+        try {
+          const response = await fetch(`${API_BASE}/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const user = await response.json();
+            document.getElementById("user-email").textContent = user.email;
+          }
+        } catch (error) {
+          console.error("Failed to load user:", error);
+        }
+      }
+
+      // Logout
+      document.getElementById("logout-btn").addEventListener("click", () => {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      });
+
+      // Load categories
+      async function loadCategories() {
+        try {
+          const response = await fetch(`${API_BASE}/categories`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            categories = await response.json();
+          }
+        } catch (error) {
+          console.error("Failed to load categories:", error);
+        }
+      }
+
+      // Format currency
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+          maximumFractionDigits: 0,
+        }).format(amount || 0);
+      }
+
+      // Format date
+      function formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      // Get progress color classes
+      function getProgressColor(percent) {
+        if (percent >= 100) return "bg-red-500";
+        if (percent >= 80) return "bg-yellow-500";
+        return "bg-green-500";
+      }
+
+      // Get status badge
+      function getStatusBadge(percent, isActive) {
+        if (!isActive)
+          return '<span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">Inactive</span>';
+        if (percent >= 100)
+          return '<span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Over Budget</span>';
+        if (percent >= 80)
+          return '<span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Alert</span>';
+        return '<span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">On Track</span>';
+      }
+
+      // Handle HTMX responses
+      document.body.addEventListener("htmx:afterSwap", (event) => {
+        if (event.detail.target.id === "active-budget-container") {
+          try {
+            const response = JSON.parse(event.detail.xhr.response);
+            renderActiveBudget(response);
+          } catch (error) {
+            event.detail.target.innerHTML = `
+                        <div class="bg-white rounded-lg shadow p-12 text-center">
+                            <div class="text-6xl mb-4">📊</div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Active Budget</h3>
+                            <p class="text-gray-600 mb-4">Create your first budget to start tracking your spending</p>
+                            <button onclick="openCreateModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium">
+                                Create Budget
+                            </button>
+                        </div>
+                    `;
+          }
+        }
+
+        if (event.detail.target.id === "budget-list-container") {
+          try {
+            const response = JSON.parse(event.detail.xhr.response);
+            renderBudgetList(response);
+          } catch (error) {
+            console.error("Failed to parse budget list:", error);
+          }
+        }
+      });
+
+      // Render active budget
+      function renderActiveBudget(budget) {
+        const percent = budget.overall_utilization_percent || 0;
+        const progressColor = getProgressColor(percent);
+        const statusBadge = getStatusBadge(percent, budget.is_active);
+
+        const html = `
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-sm text-gray-600 font-medium mb-2">TOTAL BUDGET</div>
+                        <div class="text-3xl font-bold text-gray-900">${formatCurrency(
+                          budget.total_budget
+                        )}</div>
+                        <div class="text-sm text-gray-600 mt-1">${
+                          budget.name
+                        }</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-sm text-gray-600 font-medium mb-2">TOTAL SPENT</div>
+                        <div class="text-3xl font-bold text-gray-900">${formatCurrency(
+                          budget.total_spent
+                        )}</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                            <div class="${progressColor} rounded-full h-2" style="width: ${Math.min(
+          percent,
+          100
+        )}%"></div>
+                        </div>
+                        <div class="text-sm text-gray-600 mt-1">${percent.toFixed(
+                          1
+                        )}% used</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-sm text-gray-600 font-medium mb-2">REMAINING</div>
+                        <div class="text-3xl font-bold text-gray-900">${formatCurrency(
+                          budget.total_remaining
+                        )}</div>
+                        <div class="mt-3">${statusBadge}</div>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <canvas id="category-chart" class="max-h-64"></canvas>
+                        </div>
+                        <div class="space-y-3">
+                            ${budget.category_allocations
+                              .map((cat) => {
+                                const catPercent = cat.utilization_percent || 0;
+                                const catColor = getProgressColor(catPercent);
+                                return `
+                                    <div class="border-b border-gray-200 pb-3">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div class="font-medium text-gray-900">${
+                                              cat.category_name
+                                            }</div>
+                                            <div class="text-right">
+                                                <div class="text-sm font-medium text-gray-900">${formatCurrency(
+                                                  cat.spent_amount
+                                                )} / ${formatCurrency(
+                                  cat.allocated_amount
+                                )}</div>
+                                                <div class="text-xs text-gray-600">${catPercent.toFixed(
+                                                  1
+                                                )}%</div>
+                                            </div>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="${catColor} rounded-full h-2" style="width: ${Math.min(
+                                  catPercent,
+                                  100
+                                )}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                              })
+                              .join("")}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        document.getElementById("active-budget-container").innerHTML = html;
+        renderCategoryChart(budget.category_allocations);
+      }
+
+      // Render category chart
+      function renderCategoryChart(allocations) {
+        const ctx = document.getElementById("category-chart");
+        if (!ctx) return;
+
+        new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: allocations.map((a) => a.category_name),
+            datasets: [
+              {
+                data: allocations.map((a) => a.spent_amount || 0),
+                backgroundColor: [
+                  "#3b82f6",
+                  "#10b981",
+                  "#f59e0b",
+                  "#ef4444",
+                  "#8b5cf6",
+                  "#ec4899",
+                  "#14b8a6",
+                  "#f97316",
+                  "#06b6d4",
+                  "#84cc16",
+                ],
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                position: "bottom",
+              },
+            },
+          },
+        });
+      }
+
+      // Render budget list
+      function renderBudgetList(data) {
+        if (!data.budgets || data.budgets.length === 0) {
+          document.getElementById("budget-list-container").innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="text-6xl mb-4">📋</div>
+                        <p class="text-gray-600">No budgets created yet</p>
+                    </div>
+                `;
+          return;
+        }
+
+        const html = data.budgets
+          .map((budget) => {
+            const percent = budget.overall_utilization_percent || 0;
+            const progressColor = getProgressColor(percent);
+            const statusBadge = getStatusBadge(percent, budget.is_active);
+
+            return `
+                    <div class="border-b border-gray-200 p-6 hover:bg-gray-50 transition-colors">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900">${
+                                  budget.name
+                                }</h4>
+                                <p class="text-sm text-gray-600">${formatDate(
+                                  budget.period_start
+                                )} - ${formatDate(budget.period_end)}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                ${statusBadge}
+                                <button onclick="editBudget(${
+                                  budget.id
+                                })" class="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm font-medium">
+                                    Edit
+                                </button>
+                                <button onclick="deleteBudget(${budget.id}, '${
+              budget.name
+            }')" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-sm font-medium">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 mb-3">
+                            <div class="text-center">
+                                <div class="text-xs text-gray-600 mb-1">Budget</div>
+                                <div class="text-lg font-semibold text-gray-900">${formatCurrency(
+                                  budget.total_budget
+                                )}</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-600 mb-1">Spent</div>
+                                <div class="text-lg font-semibold text-gray-900">${formatCurrency(
+                                  budget.total_spent
+                                )}</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-600 mb-1">Remaining</div>
+                                <div class="text-lg font-semibold text-gray-900">${formatCurrency(
+                                  budget.total_remaining
+                                )}</div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="${progressColor} rounded-full h-2" style="width: ${Math.min(
+              percent,
+              100
+            )}%"></div>
+                        </div>
+                        <div class="text-center text-sm text-gray-600 mt-1">${percent.toFixed(
+                          1
+                        )}% utilized</div>
+                    </div>
+                `;
+          })
+          .join("");
+
+        document.getElementById("budget-list-container").innerHTML = html;
+      }
+
+      // Modal functions
+      function openCreateModal() {
+        document.getElementById("modal-title").textContent = "Create Budget";
+        document.getElementById("budget-form").reset();
+        document.getElementById("budget-id").value = "";
+        document.getElementById("category-allocations-container").innerHTML =
+          "";
+        document.getElementById("budget-modal").classList.remove("hidden");
+
+        // Set default dates
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        document.getElementById("period_start").value = start
+          .toISOString()
+          .split("T")[0];
+        document.getElementById("period_end").value = end
+          .toISOString()
+          .split("T")[0];
+      }
+
+      function closeModal() {
+        document.getElementById("budget-modal").classList.add("hidden");
+        document.getElementById("form-error").textContent = "";
+      }
+
+      // Category allocation management
+      let allocationCounter = 0;
+      function addCategoryAllocation(categoryId = "", amount = "") {
+        const container = document.getElementById(
+          "category-allocations-container"
+        );
+        const id = allocationCounter++;
+
+        const row = document.createElement("div");
+        row.className = "flex gap-2 items-center";
+        row.id = `allocation-${id}`;
+        row.innerHTML = `
+                <select name="category_id_${id}" required class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <option value="">Select Category</option>
+                    ${categories
+                      .map(
+                        (cat) =>
+                          `<option value="${cat.id}" ${
+                            cat.id == categoryId ? "selected" : ""
+                          }>${cat.name}</option>`
+                      )
+                      .join("")}
+                </select>
+                <input type="number" name="allocated_amount_${id}" placeholder="Amount" step="0.01" value="${amount}" required 
+                    class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                <button type="button" onclick="removeAllocation(${id})" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium">
+                    ×
+                </button>
+            `;
+        container.appendChild(row);
+      }
+
+      function removeAllocation(id) {
+        document.getElementById(`allocation-${id}`).remove();
+      }
+
+      // Submit budget
+      async function submitBudget(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const budgetId = formData.get("budget_id");
+
+        // Collect category allocations
+        const categoryAllocations = [];
+        const container = document.getElementById(
+          "category-allocations-container"
+        );
+        const allocationItems = container.querySelectorAll(
+          'div[id^="allocation-"]'
+        );
+
+        allocationItems.forEach((item) => {
+          const select = item.querySelector("select");
+          const input = item.querySelector('input[type="number"]');
+          if (select.value && input.value) {
+            categoryAllocations.push({
+              category_id: parseInt(select.value),
+              allocated_amount: parseFloat(input.value),
+            });
+          }
+        });
+
+        const budgetData = {
+          name: formData.get("name"),
+          period_start: formData.get("period_start"),
+          period_end: formData.get("period_end"),
+          total_budget: parseFloat(formData.get("total_budget")),
+          needs_budget: formData.get("needs_budget")
+            ? parseFloat(formData.get("needs_budget"))
+            : null,
+          wants_budget: formData.get("wants_budget")
+            ? parseFloat(formData.get("wants_budget"))
+            : null,
+          savings_budget: formData.get("savings_budget")
+            ? parseFloat(formData.get("savings_budget"))
+            : null,
+          alert_threshold_percent: parseInt(
+            formData.get("alert_threshold_percent")
+          ),
+          is_active: true,
+          category_allocations: categoryAllocations,
+        };
+
+        try {
+          const url = budgetId
+            ? `${API_BASE}/budgets/${budgetId}`
+            : `${API_BASE}/budgets`;
+          const method = budgetId ? "PUT" : "POST";
+
+          const response = await fetch(url, {
+            method: method,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(budgetData),
+          });
+
+          if (response.ok) {
+            closeModal();
+            htmx.trigger("#active-budget-container", "load");
+            htmx.trigger("#budget-list-container", "load");
+          } else {
+            const error = await response.json();
+            document.getElementById("form-error").textContent =
+              error.detail || "Failed to save budget";
+          }
+        } catch (error) {
+          document.getElementById("form-error").textContent =
+            "Network error. Please try again.";
+        }
+      }
+
+      // Edit budget
+      async function editBudget(budgetId) {
+        try {
+          const response = await fetch(`${API_BASE}/budgets/${budgetId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (response.ok) {
+            const budget = await response.json();
+            document.getElementById("modal-title").textContent = "Edit Budget";
+            document.getElementById("budget-id").value = budget.id;
+            document.getElementById("name").value = budget.name;
+            document.getElementById("period_start").value = budget.period_start;
+            document.getElementById("period_end").value = budget.period_end;
+            document.getElementById("total_budget").value = budget.total_budget;
+            document.getElementById("needs_budget").value =
+              budget.needs_budget || "";
+            document.getElementById("wants_budget").value =
+              budget.wants_budget || "";
+            document.getElementById("savings_budget").value =
+              budget.savings_budget || "";
+            document.getElementById("alert_threshold_percent").value =
+              budget.alert_threshold_percent;
+
+            document.getElementById(
+              "category-allocations-container"
+            ).innerHTML = "";
+            budget.category_allocations.forEach((alloc) => {
+              addCategoryAllocation(alloc.category_id, alloc.allocated_amount);
+            });
+
+            document.getElementById("budget-modal").classList.remove("hidden");
+          }
+        } catch (error) {
+          alert("Failed to load budget details");
+        }
+      }
+
+      // Delete budget
+      async function deleteBudget(budgetId, budgetName) {
+        if (!confirm(`Are you sure you want to delete "${budgetName}"?`))
+          return;
+
+        try {
+          const response = await fetch(`${API_BASE}/budgets/${budgetId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (response.ok) {
+            htmx.trigger("#active-budget-container", "load");
+            htmx.trigger("#budget-list-container", "load");
+          } else {
+            alert("Failed to delete budget");
+          }
+        } catch (error) {
+          alert("Network error. Please try again.");
+        }
+      }
+
+      // Initialize
+      loadUserEmail();
+      loadCategories();
+    </script>
+  </body>
+</html>

@@ -409,6 +409,28 @@ async def list_categories(
     return categories
 
 
+@router.get("/categories")
+async def list_categories(
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """List all categories for dropdowns."""
+    query = select(Category).order_by(Category.name)
+    result = await session.execute(query)
+    categories = result.scalars().all()
+
+    return [
+        {
+            "id": cat.id,
+            "name": cat.name,
+            "category_type": cat.category_type,
+            "icon": cat.icon,
+            "color": cat.color,
+        }
+        for cat in categories
+    ]
+
+
 @router.get("/export/xlsx")
 async def export_transactions_xlsx(
     start_date: Optional[date] = None,

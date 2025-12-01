@@ -28,9 +28,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-async def calculate_budget_spending(
-    budget: Budget, session: AsyncSession
-) -> dict:
+async def calculate_budget_spending(budget: Budget, session: AsyncSession) -> dict:
     """
     Calculate spending statistics for a budget.
     Returns total spent, remaining, and utilization percentage.
@@ -44,23 +42,23 @@ async def calculate_budget_spending(
             Transaction.t_date <= budget.period_end,
         )
     )
-    
+
     # Add family filter if budget is family-based
     if budget.family_id:
         query = query.where(Transaction.family_id == budget.family_id)
-    
+
     result = await session.execute(query)
     total_spent = result.scalar() or Decimal("0.00")
-    
+
     # Calculate remaining and utilization
     total_remaining = None
     utilization_percent = None
-    
+
     if budget.total_budget:
         total_remaining = budget.total_budget - total_spent
         if budget.total_budget > 0:
             utilization_percent = float((total_spent / budget.total_budget) * 100)
-    
+
     return {
         "total_spent": total_spent,
         "total_remaining": total_remaining,
@@ -84,21 +82,21 @@ async def calculate_category_spending(
             Transaction.t_date <= budget.period_end,
         )
     )
-    
+
     if budget.family_id:
         query = query.where(Transaction.family_id == budget.family_id)
-    
+
     result = await session.execute(query)
     spent_amount = result.scalar() or Decimal("0.00")
-    
+
     remaining_amount = budget_category.allocated_amount - spent_amount
     utilization_percent = None
-    
+
     if budget_category.allocated_amount > 0:
         utilization_percent = float(
             (spent_amount / budget_category.allocated_amount) * 100
         )
-    
+
     return {
         "spent_amount": spent_amount,
         "remaining_amount": remaining_amount,
@@ -106,9 +104,7 @@ async def calculate_category_spending(
     }
 
 
-@router.post(
-    "/", response_model=BudgetResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/", response_model=BudgetResponse, status_code=status.HTTP_201_CREATED)
 async def create_budget(
     budget_data: BudgetCreate,
     current_user: User = Depends(get_current_active_user),
@@ -138,16 +134,16 @@ async def create_budget(
             ),
         )
     )
-    
+
     result = await session.execute(overlap_query)
     overlapping_budget = result.scalar_one_or_none()
-    
+
     if overlapping_budget:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Budget period overlaps with existing budget '{overlapping_budget.name}'",
         )
-    
+
     # Validate category IDs exist
     if budget_data.category_allocations:
         category_ids = [alloc.category_id for alloc in budget_data.category_allocations]
@@ -155,13 +151,13 @@ async def create_budget(
             select(Category).where(Category.id.in_(category_ids))
         )
         categories = result.scalars().all()
-        
+
         if len(categories) != len(category_ids):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="One or more category IDs are invalid",
             )
-    
+
     # Create budget
     new_budget = Budget(
         user_id=current_user.id,
@@ -176,10 +172,10 @@ async def create_budget(
         alert_threshold_percent=budget_data.alert_threshold_percent,
         is_active=budget_data.is_active,
     )
-    
+
     session.add(new_budget)
     await session.flush()  # Get the budget ID
-    
+
     # Create category allocations
     for allocation in budget_data.category_allocations:
         budget_category = BudgetCategory(
@@ -188,10 +184,10 @@ async def create_budget(
             allocated_amount=allocation.allocated_amount,
         )
         session.add(budget_category)
-    
+
     await session.commit()
     await session.refresh(new_budget)
-    
+
     # Load relationships and calculate spending
     result = await session.execute(
         select(Budget)
@@ -201,10 +197,10 @@ async def create_budget(
         .where(Budget.id == new_budget.id)
     )
     budget = result.scalar_one()
-    
+
     # Calculate spending stats
     spending_stats = await calculate_budget_spending(budget, session)
-    
+
     # Build response with category details
     category_allocations = []
     for bc in budget.budget_categories:
@@ -219,7 +215,7 @@ async def create_budget(
                 **category_stats,
             )
         )
-    
+
     response_data = BudgetResponse(
         id=budget.id,
         user_id=budget.user_id,
@@ -238,7 +234,7 @@ async def create_budget(
         category_allocations=category_allocations,
         **spending_stats,
     )
-    
+
     logger.info(f"Created budget '{budget.name}' for user {current_user.id}")
     return response_data
 
@@ -256,33 +252,33 @@ async def list_budgets(
     """
     # Build base query
     query = select(Budget).where(Budget.user_id == current_user.id)
-    
+
     if is_active is not None:
         query = query.where(Budget.is_active == is_active)
-    
+
     query = query.order_by(Budget.period_start.desc())
-    
+
     # Get total count
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await session.execute(count_query)
     total = total_result.scalar()
-    
+
     # Apply pagination
     query = query.offset((page - 1) * page_size).limit(page_size)
-    
+
     # Load budgets with relationships
     query = query.options(
         selectinload(Budget.budget_categories).selectinload(BudgetCategory.category)
     )
-    
+
     result = await session.execute(query)
     budgets = result.scalars().all()
-    
+
     # Build response with spending stats
     budget_responses = []
     for budget in budgets:
         spending_stats = await calculate_budget_spending(budget, session)
-        
+
         category_allocations = []
         for bc in budget.budget_categories:
             category_stats = await calculate_category_spending(bc, budget, session)
@@ -296,7 +292,7 @@ async def list_budgets(
                     **category_stats,
                 )
             )
-        
+
         budget_responses.append(
             BudgetResponse(
                 id=budget.id,
@@ -317,9 +313,9 @@ async def list_budgets(
                 **spending_stats,
             )
         )
-    
+
     total_pages = (total + page_size - 1) // page_size
-    
+
     return BudgetListResponse(
         budgets=budget_responses,
         total=total,
@@ -338,7 +334,7 @@ async def get_active_budget(
     Get the currently active budget for the user.
     """
     today = date.today()
-    
+
     query = (
         select(Budget)
         .options(
@@ -353,19 +349,19 @@ async def get_active_budget(
             )
         )
     )
-    
+
     result = await session.execute(query)
     budget = result.scalar_one_or_none()
-    
+
     if not budget:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No active budget found for current period",
         )
-    
+
     # Calculate spending stats
     spending_stats = await calculate_budget_spending(budget, session)
-    
+
     # Build category allocations with stats
     category_allocations = []
     for bc in budget.budget_categories:
@@ -380,7 +376,7 @@ async def get_active_budget(
                 **category_stats,
             )
         )
-    
+
     return BudgetResponse(
         id=budget.id,
         user_id=budget.user_id,
@@ -417,18 +413,18 @@ async def get_budget(
         )
         .where(and_(Budget.id == budget_id, Budget.user_id == current_user.id))
     )
-    
+
     result = await session.execute(query)
     budget = result.scalar_one_or_none()
-    
+
     if not budget:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Budget not found"
         )
-    
+
     # Calculate spending stats
     spending_stats = await calculate_budget_spending(budget, session)
-    
+
     # Build category allocations with stats
     category_allocations = []
     for bc in budget.budget_categories:
@@ -443,7 +439,7 @@ async def get_budget(
                 **category_stats,
             )
         )
-    
+
     return BudgetResponse(
         id=budget.id,
         user_id=budget.user_id,
@@ -480,30 +476,34 @@ async def update_budget(
     )
     result = await session.execute(query)
     budget = result.scalar_one_or_none()
-    
+
     if not budget:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Budget not found"
         )
-    
+
     # Update basic fields
-    update_data = budget_data.model_dump(exclude_unset=True, exclude={"category_allocations"})
+    update_data = budget_data.model_dump(
+        exclude_unset=True, exclude={"category_allocations"}
+    )
     for field, value in update_data.items():
         setattr(budget, field, value)
-    
+
     # Update category allocations if provided
     if budget_data.category_allocations is not None:
-        # Delete existing allocations
-        await session.execute(
-            select(BudgetCategory).where(BudgetCategory.budget_id == budget_id)
+        # Delete existing allocations properly
+        existing_query = select(BudgetCategory).where(
+            BudgetCategory.budget_id == budget_id
         )
-        existing_allocations = (await session.execute(
-            select(BudgetCategory).where(BudgetCategory.budget_id == budget_id)
-        )).scalars().all()
-        
+        existing_result = await session.execute(existing_query)
+        existing_allocations = existing_result.scalars().all()
+
         for alloc in existing_allocations:
             await session.delete(alloc)
-        
+
+        # Flush to ensure deletions are processed before inserts
+        await session.flush()
+
         # Create new allocations
         for allocation in budget_data.category_allocations:
             budget_category = BudgetCategory(
@@ -512,9 +512,9 @@ async def update_budget(
                 allocated_amount=allocation.allocated_amount,
             )
             session.add(budget_category)
-    
+
     await session.commit()
-    
+
     # Reload with relationships
     result = await session.execute(
         select(Budget)
@@ -524,10 +524,10 @@ async def update_budget(
         .where(Budget.id == budget_id)
     )
     budget = result.scalar_one()
-    
+
     # Calculate spending stats
     spending_stats = await calculate_budget_spending(budget, session)
-    
+
     # Build category allocations with stats
     category_allocations = []
     for bc in budget.budget_categories:
@@ -542,9 +542,9 @@ async def update_budget(
                 **category_stats,
             )
         )
-    
+
     logger.info(f"Updated budget {budget_id} for user {current_user.id}")
-    
+
     return BudgetResponse(
         id=budget.id,
         user_id=budget.user_id,
@@ -579,14 +579,14 @@ async def delete_budget(
     )
     result = await session.execute(query)
     budget = result.scalar_one_or_none()
-    
+
     if not budget:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Budget not found"
         )
-    
+
     await session.delete(budget)
     await session.commit()
-    
+
     logger.info(f"Deleted budget {budget_id} for user {current_user.id}")
     return None
