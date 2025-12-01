@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 import logging
 
 from app.database import engine
-from app.routers import auth, transactions, budgets
+from app.routers import auth, transactions, budgets, categories
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -96,9 +96,16 @@ async def auth_callback(request: Request):
     return templates.TemplateResponse("auth_callback.html", {"request": request})
 
 
+@app.get("/budgets", response_class=HTMLResponse)
+async def budgets_page(request: Request):
+    """Serve budgets page."""
+    return templates.TemplateResponse("budgets.html", {"request": request})
+
+
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(
     transactions.router, prefix="/api/transactions", tags=["Transactions"]
 )
 app.include_router(budgets.router, prefix="/api/budgets", tags=["Budgets"])
+app.include_router(categories.router, prefix="/api", tags=["Categories"])
