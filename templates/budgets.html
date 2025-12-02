@@ -286,6 +286,7 @@
       const API_BASE = "/api";
       const token = localStorage.getItem("token");
       let categories = [];
+      let currentChart = null; // Track the chart instance
 
       // Check authentication
       if (!token) {
@@ -368,7 +369,88 @@
         return '<span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">On Track</span>';
       }
 
-      // Handle HTMX responses
+      // Show toast notification
+      function showToast(message, type = "success") {
+        const toast = document.createElement("div");
+        toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-medium z-50 transition-opacity ${
+          type === "success" ? "bg-green-600" : "bg-red-600"
+        }`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
+      // Reload budgets data - FIXED VERSION
+      function reloadBudgets() {
+        console.log("Reloading budgets...");
+
+        // Show loading state for active budget
+        const activeContainer = document.getElementById(
+          "active-budget-container"
+        );
+        activeContainer.innerHTML = `
+      <div class="text-center py-12 bg-white rounded-lg shadow">
+        <div class="animate-pulse text-gray-500">Refreshing budget data...</div>
+      </div>
+    `;
+
+        // Show loading state for budget list
+        const listContainer = document.getElementById("budget-list-container");
+        listContainer.innerHTML = `
+      <div class="text-center py-12">
+        <div class="animate-pulse text-gray-500">Refreshing budget list...</div>
+      </div>
+    `;
+
+        // Fetch active budget
+        fetch(`${API_BASE}/budgets/active`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error("No active budget");
+          })
+          .then((budget) => {
+            renderActiveBudget(budget);
+          })
+          .catch((error) => {
+            activeContainer.innerHTML = `
+        <div class="bg-white rounded-lg shadow p-12 text-center">
+          <div class="text-6xl mb-4">📊</div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No Active Budget</h3>
+          <p class="text-gray-600 mb-4">Create your first budget to start tracking your spending</p>
+          <button onclick="openCreateModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium">
+            Create Budget
+          </button>
+        </div>
+      `;
+          });
+
+        // Fetch budget list
+        fetch(`${API_BASE}/budgets?page=1&page_size=10`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            renderBudgetList(data);
+          })
+          .catch((error) => {
+            console.error("Failed to load budget list:", error);
+            listContainer.innerHTML = `
+        <div class="text-center py-12">
+          <p class="text-red-600">Failed to load budgets</p>
+        </div>
+      `;
+          });
+      }
+
+      // Handle HTMX responses (INITIAL LOAD ONLY)
       document.body.addEventListener("htmx:afterSwap", (event) => {
         if (event.detail.target.id === "active-budget-container") {
           try {
@@ -376,15 +458,15 @@
             renderActiveBudget(response);
           } catch (error) {
             event.detail.target.innerHTML = `
-                        <div class="bg-white rounded-lg shadow p-12 text-center">
-                            <div class="text-6xl mb-4">📊</div>
-                            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Active Budget</h3>
-                            <p class="text-gray-600 mb-4">Create your first budget to start tracking your spending</p>
-                            <button onclick="openCreateModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium">
-                                Create Budget
-                            </button>
-                        </div>
-                    `;
+          <div class="bg-white rounded-lg shadow p-12 text-center">
+            <div class="text-6xl mb-4">📊</div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Active Budget</h3>
+            <p class="text-gray-600 mb-4">Create your first budget to start tracking your spending</p>
+            <button onclick="openCreateModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium">
+              Create Budget
+            </button>
+          </div>
+        `;
           }
         }
 
@@ -398,102 +480,107 @@
         }
       });
 
-      // Render active budget
+      // Render active budget - FIXED VERSION
       function renderActiveBudget(budget) {
         const percent = budget.overall_utilization_percent || 0;
         const progressColor = getProgressColor(percent);
         const statusBadge = getStatusBadge(percent, budget.is_active);
 
         const html = `
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <div class="text-sm text-gray-600 font-medium mb-2">TOTAL BUDGET</div>
-                        <div class="text-3xl font-bold text-gray-900">${formatCurrency(
-                          budget.total_budget
-                        )}</div>
-                        <div class="text-sm text-gray-600 mt-1">${
-                          budget.name
-                        }</div>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <div class="text-sm text-gray-600 font-medium mb-2">TOTAL SPENT</div>
-                        <div class="text-3xl font-bold text-gray-900">${formatCurrency(
-                          budget.total_spent
-                        )}</div>
-                        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-                            <div class="${progressColor} rounded-full h-2" style="width: ${Math.min(
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="text-sm text-gray-600 font-medium mb-2">TOTAL BUDGET</div>
+          <div class="text-3xl font-bold text-gray-900">${formatCurrency(
+            budget.total_budget
+          )}</div>
+          <div class="text-sm text-gray-600 mt-1">${budget.name}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="text-sm text-gray-600 font-medium mb-2">TOTAL SPENT</div>
+          <div class="text-3xl font-bold text-gray-900">${formatCurrency(
+            budget.total_spent
+          )}</div>
+          <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+            <div class="${progressColor} rounded-full h-2" style="width: ${Math.min(
           percent,
           100
         )}%"></div>
-                        </div>
-                        <div class="text-sm text-gray-600 mt-1">${percent.toFixed(
-                          1
-                        )}% used</div>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <div class="text-sm text-gray-600 font-medium mb-2">REMAINING</div>
-                        <div class="text-3xl font-bold text-gray-900">${formatCurrency(
-                          budget.total_remaining
-                        )}</div>
-                        <div class="mt-3">${statusBadge}</div>
-                    </div>
-                </div>
+          </div>
+          <div class="text-sm text-gray-600 mt-1">${percent.toFixed(
+            1
+          )}% used</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="text-sm text-gray-600 font-medium mb-2">REMAINING</div>
+          <div class="text-3xl font-bold text-gray-900">${formatCurrency(
+            budget.total_remaining
+          )}</div>
+          <div class="mt-3">${statusBadge}</div>
+        </div>
+      </div>
 
-                <!-- Category Breakdown -->
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <canvas id="category-chart" class="max-h-64"></canvas>
-                        </div>
-                        <div class="space-y-3">
-                            ${budget.category_allocations
-                              .map((cat) => {
-                                const catPercent = cat.utilization_percent || 0;
-                                const catColor = getProgressColor(catPercent);
-                                return `
-                                    <div class="border-b border-gray-200 pb-3">
-                                        <div class="flex justify-between items-start mb-2">
-                                            <div class="font-medium text-gray-900">${
-                                              cat.category_name
-                                            }</div>
-                                            <div class="text-right">
-                                                <div class="text-sm font-medium text-gray-900">${formatCurrency(
-                                                  cat.spent_amount
-                                                )} / ${formatCurrency(
-                                  cat.allocated_amount
-                                )}</div>
-                                                <div class="text-xs text-gray-600">${catPercent.toFixed(
-                                                  1
-                                                )}%</div>
-                                            </div>
-                                        </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-2">
-                                            <div class="${catColor} rounded-full h-2" style="width: ${Math.min(
-                                  catPercent,
-                                  100
-                                )}%"></div>
-                                        </div>
-                                    </div>
-                                `;
-                              })
-                              .join("")}
-                        </div>
+      <!-- Category Breakdown -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <canvas id="category-chart" class="max-h-64"></canvas>
+          </div>
+          <div class="space-y-3">
+            ${budget.category_allocations
+              .map((cat) => {
+                const catPercent = cat.utilization_percent || 0;
+                const catColor = getProgressColor(catPercent);
+                return `
+                <div class="border-b border-gray-200 pb-3">
+                  <div class="flex justify-between items-start mb-2">
+                    <div class="font-medium text-gray-900">${
+                      cat.category_name
+                    }</div>
+                    <div class="text-right">
+                      <div class="text-sm font-medium text-gray-900">${formatCurrency(
+                        cat.spent_amount
+                      )} / ${formatCurrency(cat.allocated_amount)}</div>
+                      <div class="text-xs text-gray-600">${catPercent.toFixed(
+                        1
+                      )}%</div>
                     </div>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="${catColor} rounded-full h-2" style="width: ${Math.min(
+                  catPercent,
+                  100
+                )}%"></div>
+                  </div>
                 </div>
-            `;
+              `;
+              })
+              .join("")}
+          </div>
+        </div>
+      </div>
+    `;
 
         document.getElementById("active-budget-container").innerHTML = html;
-        renderCategoryChart(budget.category_allocations);
+
+        // Render chart AFTER DOM update
+        setTimeout(() => renderCategoryChart(budget.category_allocations), 100);
       }
 
-      // Render category chart
+      // Render category chart - FIXED VERSION with instance management
       function renderCategoryChart(allocations) {
         const ctx = document.getElementById("category-chart");
         if (!ctx) return;
 
-        new Chart(ctx, {
+        // CRITICAL FIX: Destroy existing chart before creating new one
+        if (currentChart) {
+          currentChart.destroy();
+          currentChart = null;
+        }
+
+        // Create new chart instance and store reference
+        currentChart = new Chart(ctx, {
           type: "doughnut",
           data: {
             labels: allocations.map((a) => a.category_name),
@@ -531,11 +618,11 @@
       function renderBudgetList(data) {
         if (!data.budgets || data.budgets.length === 0) {
           document.getElementById("budget-list-container").innerHTML = `
-                    <div class="text-center py-12">
-                        <div class="text-6xl mb-4">📋</div>
-                        <p class="text-gray-600">No budgets created yet</p>
-                    </div>
-                `;
+        <div class="text-center py-12">
+          <div class="text-6xl mb-4">📋</div>
+          <p class="text-gray-600">No budgets created yet</p>
+        </div>
+      `;
           return;
         }
 
@@ -546,61 +633,61 @@
             const statusBadge = getStatusBadge(percent, budget.is_active);
 
             return `
-                    <div class="border-b border-gray-200 p-6 hover:bg-gray-50 transition-colors">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h4 class="text-lg font-semibold text-gray-900">${
-                                  budget.name
-                                }</h4>
-                                <p class="text-sm text-gray-600">${formatDate(
-                                  budget.period_start
-                                )} - ${formatDate(budget.period_end)}</p>
-                            </div>
-                            <div class="flex gap-2">
-                                ${statusBadge}
-                                <button onclick="editBudget(${
-                                  budget.id
-                                })" class="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm font-medium">
-                                    Edit
-                                </button>
-                                <button onclick="deleteBudget(${budget.id}, '${
+        <div class="border-b border-gray-200 p-6 hover:bg-gray-50 transition-colors">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <h4 class="text-lg font-semibold text-gray-900">${
+                budget.name
+              }</h4>
+              <p class="text-sm text-gray-600">${formatDate(
+                budget.period_start
+              )} - ${formatDate(budget.period_end)}</p>
+            </div>
+            <div class="flex gap-2">
+              ${statusBadge}
+              <button onclick="editBudget(${
+                budget.id
+              })" class="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm font-medium">
+                Edit
+              </button>
+              <button onclick="deleteBudget(${budget.id}, '${
               budget.name
             }')" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-sm font-medium">
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-4 mb-3">
-                            <div class="text-center">
-                                <div class="text-xs text-gray-600 mb-1">Budget</div>
-                                <div class="text-lg font-semibold text-gray-900">${formatCurrency(
-                                  budget.total_budget
-                                )}</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-xs text-gray-600 mb-1">Spent</div>
-                                <div class="text-lg font-semibold text-gray-900">${formatCurrency(
-                                  budget.total_spent
-                                )}</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-xs text-gray-600 mb-1">Remaining</div>
-                                <div class="text-lg font-semibold text-gray-900">${formatCurrency(
-                                  budget.total_remaining
-                                )}</div>
-                            </div>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="${progressColor} rounded-full h-2" style="width: ${Math.min(
+                Delete
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-4 mb-3">
+            <div class="text-center">
+              <div class="text-xs text-gray-600 mb-1">Budget</div>
+              <div class="text-lg font-semibold text-gray-900">${formatCurrency(
+                budget.total_budget
+              )}</div>
+            </div>
+            <div class="text-center">
+              <div class="text-xs text-gray-600 mb-1">Spent</div>
+              <div class="text-lg font-semibold text-gray-900">${formatCurrency(
+                budget.total_spent
+              )}</div>
+            </div>
+            <div class="text-center">
+              <div class="text-xs text-gray-600 mb-1">Remaining</div>
+              <div class="text-lg font-semibold text-gray-900">${formatCurrency(
+                budget.total_remaining
+              )}</div>
+            </div>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="${progressColor} rounded-full h-2" style="width: ${Math.min(
               percent,
               100
             )}%"></div>
-                        </div>
-                        <div class="text-center text-sm text-gray-600 mt-1">${percent.toFixed(
-                          1
-                        )}% utilized</div>
-                    </div>
-                `;
+          </div>
+          <div class="text-center text-sm text-gray-600 mt-1">${percent.toFixed(
+            1
+          )}% utilized</div>
+        </div>
+      `;
           })
           .join("");
 
@@ -645,23 +732,23 @@
         row.className = "flex gap-2 items-center";
         row.id = `allocation-${id}`;
         row.innerHTML = `
-                <select name="category_id_${id}" required class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                    <option value="">Select Category</option>
-                    ${categories
-                      .map(
-                        (cat) =>
-                          `<option value="${cat.id}" ${
-                            cat.id == categoryId ? "selected" : ""
-                          }>${cat.name}</option>`
-                      )
-                      .join("")}
-                </select>
-                <input type="number" name="allocated_amount_${id}" placeholder="Amount" step="0.01" value="${amount}" required 
-                    class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                <button type="button" onclick="removeAllocation(${id})" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium">
-                    ×
-                </button>
-            `;
+      <select name="category_id_${id}" required class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+        <option value="">Select Category</option>
+        ${categories
+          .map(
+            (cat) =>
+              `<option value="${cat.id}" ${
+                cat.id == categoryId ? "selected" : ""
+              }>${cat.name}</option>`
+          )
+          .join("")}
+      </select>
+      <input type="number" name="allocated_amount_${id}" placeholder="Amount" step="0.01" value="${amount}" required 
+        class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      <button type="button" onclick="removeAllocation(${id})" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium">
+        ×
+      </button>
+    `;
         container.appendChild(row);
       }
 
@@ -669,7 +756,7 @@
         document.getElementById(`allocation-${id}`).remove();
       }
 
-      // Submit budget
+      // Submit budget - IMPROVED VERSION with better feedback
       async function submitBudget(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
@@ -733,8 +820,15 @@
 
           if (response.ok) {
             closeModal();
-            htmx.trigger("#active-budget-container", "load");
-            htmx.trigger("#budget-list-container", "load");
+            showToast(
+              budgetId
+                ? "Budget updated successfully!"
+                : "Budget created successfully!",
+              "success"
+            );
+
+            // Reload budgets with the new function
+            setTimeout(() => reloadBudgets(), 300);
           } else {
             const error = await response.json();
             document.getElementById("form-error").textContent =
@@ -780,11 +874,11 @@
             document.getElementById("budget-modal").classList.remove("hidden");
           }
         } catch (error) {
-          alert("Failed to load budget details");
+          showToast("Failed to load budget details", "error");
         }
       }
 
-      // Delete budget
+      // Delete budget - IMPROVED VERSION with better feedback
       async function deleteBudget(budgetId, budgetName) {
         if (!confirm(`Are you sure you want to delete "${budgetName}"?`))
           return;
@@ -796,13 +890,15 @@
           });
 
           if (response.ok) {
-            htmx.trigger("#active-budget-container", "load");
-            htmx.trigger("#budget-list-container", "load");
+            showToast("Budget deleted successfully!", "success");
+
+            // Reload budgets with the new function
+            setTimeout(() => reloadBudgets(), 300);
           } else {
-            alert("Failed to delete budget");
+            showToast("Failed to delete budget", "error");
           }
         } catch (error) {
-          alert("Network error. Please try again.");
+          showToast("Network error. Please try again.", "error");
         }
       }
 
