@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+.venv
+.uv
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.coverage
+node_modules
+dist
+build
+README.md
+.DS_Store

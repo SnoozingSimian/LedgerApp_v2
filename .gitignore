@@ -210,3 +210,17 @@ __marimo__/
 __pycache__/
 *.pyc
 *.pyo
+
+# .gitignore - from perplexity
+.env
+.env.local
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.vscode/
+.DS_Store
+*.log
+node_modules/
+dist/
+build/
