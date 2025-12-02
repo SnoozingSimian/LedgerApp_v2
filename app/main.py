@@ -1,5 +1,6 @@
 # app/main.py
 
+from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -33,7 +34,12 @@ app.add_middleware(
 )
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+static_dir = Path("static")
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+    logger.info("✓ Static files directory mounted at /static")
+else:
+    logger.warning("⚠️  Static directory not found, skipping mount")
 
 # Setup Jinja2 templates
 templates = Jinja2Templates(directory="templates")
