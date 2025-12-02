@@ -259,7 +259,7 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
         )
 
         # Redirect to frontend with token
-        frontend_url = f"http://localhost:8000/auth_callback?token={access_token}"
+        frontend_url = f"{FRONTEND_URL}/auth_callback?token={access_token}"
         return RedirectResponse(url=frontend_url)
 
     except HTTPException:
