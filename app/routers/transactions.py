@@ -507,3 +507,34 @@ async def export_transactions_xlsx(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+@router.get("/credit-sources/list")
+async def get_credit_sources(
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Get all active credit sources for the current user."""
+    from app.models.credit_source import CreditSource
+    
+    result = await session.execute(
+        select(CreditSource)
+        .where(
+            and_(
+                CreditSource.user_id == current_user.id,
+                CreditSource.is_active == True,
+            )
+        )
+        .order_by(CreditSource.card_name)
+    )
+    credit_sources = result.scalars().all()
+    
+    return [
+        {
+            "id": source.id,
+            "card_name": source.card_name,
+            "card_last4": source.card_last4,
+            "card_network": source.card_network,
+            "credit_limit": str(source.credit_limit),
+        }
+        for source in credit_sources
+    ]
