@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Credit Cards - LedgerApp_v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <h1 class="text-xl font-bold text-gray-900">LedgerApp</h1>
+                    <div class="hidden md:flex space-x-4">
+                        <a href="/dashboard" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                        <a href="/transactions" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Transactions</a>
+                        <a href="/budgets" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Budgets</a>
+                        <a href="/credit-cards" class="bg-gray-100 text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Credit Cards</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span id="user-email" class="text-sm text-gray-700 mr-4"></span>
+                    <button id="logout-btn" class="text-sm text-red-600 hover:text-red-500">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header with Add Button -->
+        <div class="px-4 sm:px-0 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">Credit Cards</h2>
+                    <p class="mt-1 text-sm text-gray-600">Manage your credit cards and payment sources</p>
+                </div>
+                <button onclick="openAddModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Credit Card
+                </button>
+            </div>
+        </div>
+
+        <!-- Credit Cards List -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="credit-cards-container">
+                <div class="text-center text-gray-500 py-8">
+                    <p>Loading credit cards...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Credit Card Modal -->
+    <div id="credit-source-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-xl font-semibold text-gray-900">Add Credit Card</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form id="credit-source-form" class="space-y-4">
+                <input type="hidden" id="credit-source-id" />
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Card Name *</label>
+                    <input type="text" id="form-card-name" name="card_name" required placeholder="e.g., My HDFC Credit Card" 
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Last 4 Digits</label>
+                        <input type="text" id="form-card-last4" name="card_last4" maxlength="4" placeholder="1234"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Card Network</label>
+                        <select id="form-card-network" name="card_network"
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">Select network</option>
+                            <option value="Visa">Visa</option>
+                            <option value="Mastercard">Mastercard</option>
+                            <option value="RuPay">RuPay</option>
+                            <option value="Amex">American Express</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Credit Limit * (₹)</label>
+                    <input type="number" id="form-credit-limit" name="credit_limit" required step="0.01" min="0.01"
+                           placeholder="50000" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Billing Day (1-31)</label>
+                        <input type="number" id="form-billing-day" name="billing_day" min="1" max="31"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Due Day (1-31)</label>
+                        <input type="number" id="form-due-day" name="due_day" min="1" max="31"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" id="submit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        Save Credit Card
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "/api";
+        let token = localStorage.getItem("token");
+
+        if (!token) {
+            window.location.href = "/login";
+        }
+
+        // Load user info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById("user-email").textContent = user.email;
+                }
+            } catch (error) {
+                console.error("Error loading user:", error);
+            }
+        }
+
+        // Load credit sources
+        async function loadCreditSources() {
+            try {
+                const response = await fetch(`${API_BASE}/credit-sources`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (response.ok) {
+                    const sources = await response.json();
+                    displayCreditSources(sources);
+                }
+            } catch (error) {
+                console.error("Error loading credit sources:", error);
+            }
+        }
+
+        function displayCreditSources(sources) {
+            const container = document.getElementById("credit-cards-container");
+            
+            if (sources.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        <p class="mt-2 text-gray-600">No credit cards added yet</p>
+                        <button onclick="openAddModal()" class="mt-4 text-blue-600 hover:text-blue-700 font-medium">
+                            Add your first credit card
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sources.map(source => `
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-600">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">${source.card_name}</h3>
+                            <p class="text-sm text-gray-600">
+                                ${source.card_network || 'Unknown Network'} 
+                                ${source.card_last4 ? `• ••••${source.card_last4}` : ''}
+                            </p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="editCreditSource(${source.id})" class="text-blue-600 hover:text-blue-800 p-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                            <button onclick="deleteCreditSource(${source.id})" class="text-red-600 hover:text-red-800 p-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-600">Credit Limit</p>
+                            <p class="text-lg font-semibold text-gray-900">₹${parseFloat(source.credit_limit).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Status</p>
+                            <p class="text-sm">
+                                <span class="inline-block px-2 py-1 rounded-full ${source.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                    ${source.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    ${source.billing_day || source.due_day ? `
+                        <div class="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4 text-sm">
+                            ${source.billing_day ? `
+                                <div>
+                                    <p class="text-gray-600">Billing Day</p>
+                                    <p class="font-medium text-gray-900">${source.billing_day}</p>
+                                </div>
+                            ` : ''}
+                            ${source.due_day ? `
+                                <div>
+                                    <p class="text-gray-600">Due Day</p>
+                                    <p class="font-medium text-gray-900">${source.due_day}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Modal functions
+        function openAddModal() {
+            document.getElementById("modal-title").textContent = "Add Credit Card";
+            document.getElementById("credit-source-form").reset();
+            document.getElementById("credit-source-id").value = "";
+            document.getElementById("submit-btn").textContent = "Save Credit Card";
+            document.getElementById("credit-source-modal").classList.remove("hidden");
+        }
+
+        function closeModal() {
+            document.getElementById("credit-source-modal").classList.add("hidden");
+        }
+
+        async function editCreditSource(id) {
+            try {
+                const response = await fetch(`${API_BASE}/credit-sources/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (response.ok) {
+                    const source = await response.json();
+
+                    document.getElementById("modal-title").textContent = "Edit Credit Card";
+                    document.getElementById("credit-source-id").value = source.id;
+                    document.getElementById("form-card-name").value = source.card_name;
+                    document.getElementById("form-card-last4").value = source.card_last4 || "";
+                    document.getElementById("form-card-network").value = source.card_network || "";
+                    document.getElementById("form-credit-limit").value = source.credit_limit;
+                    document.getElementById("form-billing-day").value = source.billing_day || "";
+                    document.getElementById("form-due-day").value = source.due_day || "";
+                    document.getElementById("submit-btn").textContent = "Update Credit Card";
+
+                    document.getElementById("credit-source-modal").classList.remove("hidden");
+                }
+            } catch (error) {
+                console.error("Error loading credit source:", error);
+                alert("Failed to load credit card details");
+            }
+        }
+
+        async function deleteCreditSource(id) {
+            if (!confirm("Are you sure you want to delete this credit card?")) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/credit-sources/${id}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (response.ok) {
+                    loadCreditSources();
+                } else {
+                    alert("Failed to delete credit card");
+                }
+            } catch (error) {
+                console.error("Error deleting credit source:", error);
+                alert("Failed to delete credit card");
+            }
+        }
+
+        // Form submission
+        document.getElementById("credit-source-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const creditSourceId = document.getElementById("credit-source-id").value;
+            const isUpdate = !!creditSourceId;
+
+            const data = {
+                card_name: formData.get("card_name"),
+                card_last4: formData.get("card_last4") || null,
+                card_network: formData.get("card_network") || null,
+                credit_limit: parseFloat(formData.get("credit_limit")),
+                billing_day: formData.get("billing_day") ? parseInt(formData.get("billing_day")) : null,
+                due_day: formData.get("due_day") ? parseInt(formData.get("due_day")) : null,
+            };
+
+            try {
+                const url = isUpdate
+                    ? `${API_BASE}/credit-sources/${creditSourceId}`
+                    : `${API_BASE}/credit-sources`;
+                const method = isUpdate ? "PUT" : "POST";
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    loadCreditSources();
+                } else {
+                    const error = await response.json();
+                    alert("Failed to save credit card: " + (error.detail || "Unknown error"));
+                }
+            } catch (error) {
+                console.error("Error saving credit source:", error);
+                alert("Failed to save credit card: " + error.message);
+            }
+        });
+
+        // Logout
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+        });
+
+        // Initialize
+        loadUserInfo();
+        loadCreditSources();
+    </script>
+</body>
+</html>

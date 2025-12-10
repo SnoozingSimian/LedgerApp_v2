@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 import logging
 
 from app.database import engine
-from app.routers import auth, transactions, budgets, categories
+from app.routers import auth, transactions, budgets, categories, credit_sources
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -108,6 +108,12 @@ async def budgets_page(request: Request):
     return templates.TemplateResponse("budgets.html", {"request": request})
 
 
+@app.get("/credit-cards", response_class=HTMLResponse)
+async def credit_cards_page(request: Request):
+    """Serve credit cards management page."""
+    return templates.TemplateResponse("credit_sources.html", {"request": request})
+
+
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(
@@ -115,3 +121,6 @@ app.include_router(
 )
 app.include_router(budgets.router, prefix="/api/budgets", tags=["Budgets"])
 app.include_router(categories.router, prefix="/api", tags=["Categories"])
+app.include_router(
+    credit_sources.router, prefix="/api/credit-sources", tags=["Credit Sources"]
+)
