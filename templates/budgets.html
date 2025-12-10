@@ -1,235 +1,188 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Budgets - LedgerApp_v2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Budgets - LedgerApp</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+    <script src="/static/dark-mode.js"></script>
+    <style>
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #64748b;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+      
+      body.dark ::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+      
+      body.dark ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+    </style>
   </head>
-  <body class="bg-gray-50 min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center space-x-8">
-            <a href="/dashboard" class="text-xl font-bold text-gray-900"
-              >LedgerApp</a
-            >
-            <div class="hidden md:flex space-x-4">
-              <a
-                href="/dashboard"
-                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >Dashboard</a
-              >
-              <a
-                href="/transactions"
-                class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >Transactions</a
-              >
-              <a
-                href="/budgets"
-                class="text-green-600 bg-green-50 px-3 py-2 rounded-md text-sm font-medium"
-                >Budgets</a
-              >
-            </div>
-          </div>
-          <div class="flex items-center">
-            <span id="user-email" class="text-sm text-gray-700 mr-4"></span>
-            <button
-              id="logout-btn"
-              class="text-sm text-red-600 hover:text-red-500"
-            >
-              Logout
-            </button>
-          </div>
+  <body class="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 min-h-screen pb-24">
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm">
+      <div class="px-4 py-4 flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Budgets</h1>
+          <p class="text-xs text-gray-600 dark:text-slate-400">Track spending goals</p>
         </div>
+        <button
+          onclick="openCreateModal()"
+          class="flex items-center justify-center w-12 h-12 rounded-full bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600 active:scale-95 transition-transform shadow-lg"
+          aria-label="Create budget"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
       </div>
-    </nav>
+    </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <!-- Header -->
-      <div class="px-4 sm:px-0 mb-6">
-        <div class="flex justify-between items-center">
-          <h1 class="text-3xl font-bold text-gray-900">💰 Budgets</h1>
-          <button
-            onclick="openCreateModal()"
-            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-          >
-            + Create Budget
-          </button>
+    <main class="px-4 py-4 max-w-2xl mx-auto">
+      <!-- Active Budget Section -->
+      <div id="active-budget-container" class="mb-6">
+        <div class="bg-gray-50 dark:bg-slate-800 rounded-lg p-8 text-center animate-pulse">
+          <p class="text-gray-600 dark:text-slate-400">Loading active budget...</p>
         </div>
       </div>
 
-      <!-- Active Budget Overview -->
-      <div
-        id="active-budget-container"
-        hx-get="/api/budgets/active"
-        hx-trigger="load"
-        hx-swap="innerHTML"
-        class="px-4 sm:px-0 mb-6"
-      >
-        <div class="text-center py-12 bg-white rounded-lg shadow">
-          <div class="animate-pulse text-gray-500">
-            Loading active budget...
-          </div>
-        </div>
-      </div>
-
-      <!-- Budget List -->
-      <div class="px-4 sm:px-0">
-        <div class="bg-white rounded-lg shadow">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900">All Budgets</h2>
-          </div>
-          <div
-            id="budget-list-container"
-            hx-get="/api/budgets?page=1&page_size=10"
-            hx-trigger="load"
-            hx-swap="innerHTML"
-          >
-            <div class="text-center py-12">
-              <div class="animate-pulse text-gray-500">Loading budgets...</div>
-            </div>
+      <!-- Budgets List -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-600 dark:text-slate-400 uppercase tracking-wide px-2 mb-3">All Budgets</h2>
+        <div id="budget-list-container" class="space-y-3">
+          <div class="bg-gray-50 dark:bg-slate-800 rounded-lg p-8 text-center animate-pulse">
+            <p class="text-gray-600 dark:text-slate-400">Loading budgets...</p>
           </div>
         </div>
       </div>
     </main>
 
     <!-- Create/Edit Budget Modal -->
-    <div
-      id="budget-modal"
-      class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-    >
-      <div
-        class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-lg bg-white"
-      >
-        <div
-          class="flex justify-between items-center pb-3 border-b border-gray-200"
-        >
-          <h3 id="modal-title" class="text-2xl font-semibold text-gray-900">
-            Create Budget
-          </h3>
-          <button
-            onclick="closeModal()"
-            class="text-gray-400 hover:text-gray-600 text-3xl font-light"
-          >
-            &times;
+    <div id="budget-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
+      <div class="w-full max-h-[90vh] bg-white dark:bg-slate-800 rounded-t-2xl shadow-2xl overflow-y-auto">
+        <div class="sticky top-0 bg-white dark:bg-slate-800 px-4 py-3 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+          <h3 id="modal-title" class="text-lg font-bold text-gray-900 dark:text-white">Create Budget</h3>
+          <button onclick="closeModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
-        <form id="budget-form" onsubmit="submitBudget(event)" class="mt-4">
-          <input type="hidden" id="budget-id" name="budget_id" />
+        <form id="budget-form" class="space-y-4 p-4">
+          <input type="hidden" id="budget-id" />
 
           <!-- Budget Name -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2"
-              >Budget Name *</label
-            >
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Name *</label>
             <input
               type="text"
               id="name"
               name="name"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="e.g., January 2025 Budget"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-400 focus:border-green-500 dark:focus:border-green-400 focus:ring-green-500 dark:focus:ring-green-400"
+              placeholder="e.g., January 2025"
             />
           </div>
 
           <!-- Date Range -->
-          <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >Start Date *</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Start *</label>
               <input
                 type="date"
                 id="period_start"
                 name="period_start"
                 required
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:border-green-500 dark:focus:border-green-400 focus:ring-green-500 dark:focus:ring-green-400"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >End Date *</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">End *</label>
               <input
                 type="date"
                 id="period_end"
                 name="period_end"
                 required
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:border-green-500 dark:focus:border-green-400 focus:ring-green-500 dark:focus:ring-green-400"
               />
             </div>
           </div>
 
           <!-- Total Budget -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2"
-              >Total Budget (₹) *</label
-            >
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Total Budget (₹) *</label>
             <input
               type="number"
               id="total_budget"
               name="total_budget"
               step="0.01"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-400 focus:border-green-500 dark:focus:border-green-400 focus:ring-green-500 dark:focus:ring-green-400"
               placeholder="50000"
             />
           </div>
 
           <!-- 50/30/20 Allocations -->
-          <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >Needs Budget (₹)</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Needs (₹)</label>
               <input
                 type="number"
                 id="needs_budget"
                 name="needs_budget"
                 step="0.01"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-400 focus:border-green-500 dark:focus:border-green-400 focus:ring-green-500 dark:focus:ring-green-400"
                 placeholder="25000"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >Wants Budget (₹)</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Wants (₹)</label>
               <input
                 type="number"
                 id="wants_budget"
                 name="wants_budget"
                 step="0.01"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-400 focus:border-green-500 dark:focus:border-green-400 focus:ring-green-500 dark:focus:ring-green-400"
                 placeholder="15000"
               />
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >Savings Budget (₹)</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Savings (₹)</label>
               <input
                 type="number"
                 id="savings_budget"
                 name="savings_budget"
                 step="0.01"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-400 focus:border-green-500 dark:focus:border-green-400 focus:ring-green-500 dark:focus:ring-green-400"
                 placeholder="10000"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >Alert Threshold (%)</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Alert (%)</label>
               <input
                 type="number"
                 id="alert_threshold_percent"
@@ -237,43 +190,41 @@
                 min="1"
                 max="100"
                 value="80"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:border-green-500 dark:focus:border-green-400 focus:ring-green-500 dark:focus:ring-green-400"
               />
             </div>
           </div>
 
           <!-- Category Allocations -->
-          <div class="border border-gray-300 rounded-lg p-4 mb-4">
+          <div class="border border-gray-300 dark:border-slate-600 rounded-lg p-3">
             <div class="flex justify-between items-center mb-3">
-              <label class="block text-sm font-medium text-gray-700"
-                >Category Allocations</label
-              >
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Category Allocations</label>
               <button
                 type="button"
                 onclick="addCategoryAllocation()"
-                class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm font-medium"
+                class="px-2 py-1 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded text-xs font-medium hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
               >
-                + Add Category
+                + Add
               </button>
             </div>
             <div id="category-allocations-container" class="space-y-2"></div>
           </div>
 
           <!-- Error Message -->
-          <div id="form-error" class="text-red-600 text-sm mb-4"></div>
+          <div id="form-error" class="text-red-600 dark:text-red-400 text-sm"></div>
 
-          <!-- Actions -->
-          <div class="flex gap-3">
+          <!-- Buttons -->
+          <div class="flex gap-2 pt-4 pb-6">
             <button
               type="submit"
-              class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+              class="flex-1 px-4 py-3 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 font-medium active:scale-95 transition-transform"
             >
               Save Budget
             </button>
             <button
               type="button"
               onclick="closeModal()"
-              class="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-medium"
+              class="flex-1 px-4 py-3 bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 font-medium active:scale-95 transition-transform"
             >
               Cancel
             </button>
@@ -282,21 +233,98 @@
       </div>
     </div>
 
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 shadow-2xl z-50">
+      <div class="flex justify-around">
+        <a href="/dashboard" class="flex-1 flex flex-col items-center justify-center py-4 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 transition-colors active:bg-gray-50 dark:active:bg-slate-700/50">
+          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-3m0 0l7-4 7 4M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10M9 21h6" />
+          </svg>
+          <span class="text-xs font-medium">Home</span>
+        </a>
+        <a href="/transactions" class="flex-1 flex flex-col items-center justify-center py-4 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 transition-colors active:bg-gray-50 dark:active:bg-slate-700/50">
+          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span class="text-xs font-medium">Transactions</span>
+        </a>
+        <a href="/budgets" class="flex-1 flex flex-col items-center justify-center py-4 text-green-600 dark:text-green-400 border-t-2 border-green-600 dark:border-green-400 transition-colors active:bg-green-50 dark:active:bg-slate-700/50">
+          <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          <span class="text-xs font-medium">Budgets</span>
+        </a>
+        <button id="menu-btn" class="flex-1 flex flex-col items-center justify-center py-4 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 transition-colors active:bg-gray-50 dark:active:bg-slate-700/50" onclick="toggleMenu()">
+          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <span class="text-xs font-medium">More</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- More Menu -->
+    <div id="more-menu" class="hidden fixed inset-0 z-40">
+      <div class="absolute inset-0 bg-black bg-opacity-50" onclick="toggleMenu()"></div>
+      <div class="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-xl shadow-2xl p-4">
+        <div class="h-1 w-12 bg-gray-300 dark:bg-slate-600 rounded-full mx-auto mb-4"></div>
+        <div class="space-y-2">
+          <a href="/credit-cards" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+            <span class="font-medium text-gray-900 dark:text-white">Credit Cards</span>
+          </a>
+          <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-left">
+            <svg id="menu-theme-icon" class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+            </svg>
+            <span class="font-medium text-gray-900 dark:text-white"><span id="menu-theme-text">Enable Dark Mode</span></span>
+          </button>
+          <hr class="my-2 border-gray-200 dark:border-slate-700" />
+          <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-600 dark:text-red-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span class="font-medium">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script>
       const API_BASE = "/api";
       const token = localStorage.getItem("token");
       let categories = [];
-      let currentChart = null; // Track the chart instance
+      let currentChart = null;
 
-      // Check authentication
       if (!token) {
         window.location.href = "/login";
       }
 
-      // Set auth header for HTMX
-      document.body.addEventListener("htmx:configRequest", (event) => {
-        event.detail.headers["Authorization"] = `Bearer ${token}`;
-      });
+      // Menu toggle
+      function toggleMenu() {
+        document.getElementById("more-menu").classList.toggle("hidden");
+      }
+
+      function toggleDarkMode() {
+        darkModeManager.toggle();
+        updateThemeIcons();
+      }
+
+      function updateThemeIcons() {
+        const menuThemeText = document.getElementById("menu-theme-text");
+        if (darkModeManager.isDarkMode) {
+          menuThemeText.textContent = "Disable Dark Mode";
+        } else {
+          menuThemeText.textContent = "Enable Dark Mode";
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      }
 
       // Load user email
       async function loadUserEmail() {
@@ -304,20 +332,14 @@
           const response = await fetch(`${API_BASE}/auth/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (response.ok) {
-            const user = await response.json();
-            document.getElementById("user-email").textContent = user.email;
+          if (!response.ok) {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
           }
         } catch (error) {
-          console.error("Failed to load user:", error);
+          console.error("Error:", error);
         }
       }
-
-      // Logout
-      document.getElementById("logout-btn").addEventListener("click", () => {
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-      });
 
       // Load categories
       async function loadCategories() {
@@ -329,11 +351,10 @@
             categories = await response.json();
           }
         } catch (error) {
-          console.error("Failed to load categories:", error);
+          console.error("Error:", error);
         }
       }
 
-      // Format currency
       function formatCurrency(amount) {
         return new Intl.NumberFormat("en-IN", {
           style: "currency",
@@ -342,7 +363,6 @@
         }).format(amount || 0);
       }
 
-      // Format date
       function formatDate(dateString) {
         return new Date(dateString).toLocaleDateString("en-IN", {
           year: "numeric",
@@ -351,30 +371,22 @@
         });
       }
 
-      // Get progress color classes
       function getProgressColor(percent) {
         if (percent >= 100) return "bg-red-500";
         if (percent >= 80) return "bg-yellow-500";
         return "bg-green-500";
       }
 
-      // Get status badge
       function getStatusBadge(percent, isActive) {
-        if (!isActive)
-          return '<span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">Inactive</span>';
-        if (percent >= 100)
-          return '<span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Over Budget</span>';
-        if (percent >= 80)
-          return '<span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Alert</span>';
-        return '<span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">On Track</span>';
+        if (!isActive) return '<span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300">Inactive</span>';
+        if (percent >= 100) return '<span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400">Over</span>';
+        if (percent >= 80) return '<span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400">Alert</span>';
+        return '<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">On Track</span>';
       }
 
-      // Show toast notification
       function showToast(message, type = "success") {
         const toast = document.createElement("div");
-        toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-medium z-50 transition-opacity ${
-          type === "success" ? "bg-green-600" : "bg-red-600"
-        }`;
+        toast.className = `fixed top-4 left-4 right-4 px-4 py-3 rounded-lg shadow-lg text-white font-medium z-50 transition-opacity ${type === "success" ? "bg-green-600 dark:bg-green-500" : "bg-red-600 dark:bg-red-500"}`;
         toast.textContent = message;
         document.body.appendChild(toast);
 
@@ -384,314 +396,186 @@
         }, 3000);
       }
 
-      // Reload budgets data - FIXED VERSION
       function reloadBudgets() {
-        console.log("Reloading budgets...");
-
-        // Show loading state for active budget
-        const activeContainer = document.getElementById(
-          "active-budget-container"
-        );
-        activeContainer.innerHTML = `
-      <div class="text-center py-12 bg-white rounded-lg shadow">
-        <div class="animate-pulse text-gray-500">Refreshing budget data...</div>
-      </div>
-    `;
-
-        // Show loading state for budget list
+        const activeContainer = document.getElementById("active-budget-container");
         const listContainer = document.getElementById("budget-list-container");
-        listContainer.innerHTML = `
-      <div class="text-center py-12">
-        <div class="animate-pulse text-gray-500">Refreshing budget list...</div>
-      </div>
-    `;
 
-        // Fetch active budget
+        activeContainer.innerHTML = '<div class="bg-gray-50 dark:bg-slate-800 rounded-lg p-8 text-center animate-pulse"><p class="text-gray-600 dark:text-slate-400">Refreshing...</p></div>';
+        listContainer.innerHTML = '<div class="bg-gray-50 dark:bg-slate-800 rounded-lg p-8 text-center animate-pulse"><p class="text-gray-600 dark:text-slate-400">Refreshing...</p></div>';
+
         fetch(`${API_BASE}/budgets/active`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-          .then((response) => {
-            if (response.ok) {
-              return response.json();
-            }
-            throw new Error("No active budget");
-          })
+          .then((r) => r.ok ? r.json() : null)
           .then((budget) => {
-            renderActiveBudget(budget);
+            if (budget) renderActiveBudget(budget);
+            else activeContainer.innerHTML = '<div class="bg-white dark:bg-slate-800 rounded-lg p-8 text-center border border-gray-200 dark:border-slate-700"><div class="text-4xl mb-2">📊</div><h3 class="font-semibold text-gray-900 dark:text-white">No Active Budget</h3><p class="text-sm text-gray-600 dark:text-slate-400">Create your first budget</p></div>';
           })
-          .catch((error) => {
-            activeContainer.innerHTML = `
-        <div class="bg-white rounded-lg shadow p-12 text-center">
-          <div class="text-6xl mb-4">📊</div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">No Active Budget</h3>
-          <p class="text-gray-600 mb-4">Create your first budget to start tracking your spending</p>
-          <button onclick="openCreateModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium">
-            Create Budget
-          </button>
-        </div>
-      `;
-          });
+          .catch((e) => console.error(e));
 
-        // Fetch budget list
         fetch(`${API_BASE}/budgets?page=1&page_size=10`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-          .then((response) => response.json())
-          .then((data) => {
-            renderBudgetList(data);
-          })
-          .catch((error) => {
-            console.error("Failed to load budget list:", error);
-            listContainer.innerHTML = `
-        <div class="text-center py-12">
-          <p class="text-red-600">Failed to load budgets</p>
-        </div>
-      `;
-          });
+          .then((r) => r.json())
+          .then((data) => renderBudgetList(data))
+          .catch((e) => console.error(e));
       }
 
-      // Handle HTMX responses (INITIAL LOAD ONLY)
-      document.body.addEventListener("htmx:afterSwap", (event) => {
-        if (event.detail.target.id === "active-budget-container") {
-          try {
-            const response = JSON.parse(event.detail.xhr.response);
-            renderActiveBudget(response);
-          } catch (error) {
-            event.detail.target.innerHTML = `
-          <div class="bg-white rounded-lg shadow p-12 text-center">
-            <div class="text-6xl mb-4">📊</div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Active Budget</h3>
-            <p class="text-gray-600 mb-4">Create your first budget to start tracking your spending</p>
-            <button onclick="openCreateModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium">
-              Create Budget
-            </button>
-          </div>
-        `;
-          }
-        }
-
-        if (event.detail.target.id === "budget-list-container") {
-          try {
-            const response = JSON.parse(event.detail.xhr.response);
-            renderBudgetList(response);
-          } catch (error) {
-            console.error("Failed to parse budget list:", error);
-          }
-        }
-      });
-
-      // Render active budget - FIXED VERSION
       function renderActiveBudget(budget) {
         const percent = budget.overall_utilization_percent || 0;
         const progressColor = getProgressColor(percent);
         const statusBadge = getStatusBadge(percent, budget.is_active);
 
         const html = `
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="text-sm text-gray-600 font-medium mb-2">TOTAL BUDGET</div>
-          <div class="text-3xl font-bold text-gray-900">${formatCurrency(
-            budget.total_budget
-          )}</div>
-          <div class="text-sm text-gray-600 mt-1">${budget.name}</div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="text-sm text-gray-600 font-medium mb-2">TOTAL SPENT</div>
-          <div class="text-3xl font-bold text-gray-900">${formatCurrency(
-            budget.total_spent
-          )}</div>
-          <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-            <div class="${progressColor} rounded-full h-2" style="width: ${Math.min(
-          percent,
-          100
-        )}%"></div>
-          </div>
-          <div class="text-sm text-gray-600 mt-1">${percent.toFixed(
-            1
-          )}% used</div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="text-sm text-gray-600 font-medium mb-2">REMAINING</div>
-          <div class="text-3xl font-bold text-gray-900">${formatCurrency(
-            budget.total_remaining
-          )}</div>
-          <div class="mt-3">${statusBadge}</div>
-        </div>
-      </div>
-
-      <!-- Category Breakdown -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <canvas id="category-chart" class="max-h-64"></canvas>
-          </div>
-          <div class="space-y-3">
-            ${budget.category_allocations
-              .map((cat) => {
-                const catPercent = cat.utilization_percent || 0;
-                const catColor = getProgressColor(catPercent);
-                return `
-                <div class="border-b border-gray-200 pb-3">
-                  <div class="flex justify-between items-start mb-2">
-                    <div class="font-medium text-gray-900">${
-                      cat.category_name
-                    }</div>
-                    <div class="text-right">
-                      <div class="text-sm font-medium text-gray-900">${formatCurrency(
-                        cat.spent_amount
-                      )} / ${formatCurrency(cat.allocated_amount)}</div>
-                      <div class="text-xs text-gray-600">${catPercent.toFixed(
-                        1
-                      )}%</div>
-                    </div>
-                  </div>
-                  <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="${catColor} rounded-full h-2" style="width: ${Math.min(
-                  catPercent,
-                  100
-                )}%"></div>
-                  </div>
+          <div class="space-y-4">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-3 gap-2">
+              <div class="bg-white dark:bg-slate-800 rounded-lg p-3 border border-gray-200 dark:border-slate-700">
+                <p class="text-xs font-medium text-gray-600 dark:text-slate-400">BUDGET</p>
+                <p class="text-lg font-bold text-gray-900 dark:text-white mt-1">${formatCurrency(budget.total_budget)}</p>
+              </div>
+              <div class="bg-white dark:bg-slate-800 rounded-lg p-3 border border-gray-200 dark:border-slate-700">
+                <p class="text-xs font-medium text-gray-600 dark:text-slate-400">SPENT</p>
+                <p class="text-lg font-bold text-gray-900 dark:text-white mt-1">${formatCurrency(budget.total_spent)}</p>
+              </div>
+              <div class="bg-white dark:bg-slate-800 rounded-lg p-3 border border-gray-200 dark:border-slate-700">
+                <p class="text-xs font-medium text-gray-600 dark:text-slate-400">LEFT</p>
+                <p class="text-lg font-bold text-gray-900 dark:text-white mt-1">${formatCurrency(budget.total_remaining)}</p>
+              </div>
+            </div>
+            
+            <!-- Progress -->
+            <div class="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
+              <div class="flex justify-between items-center mb-2">
+                <div>
+                  <p class="font-semibold text-gray-900 dark:text-white">${budget.name}</p>
+                  <p class="text-xs text-gray-600 dark:text-slate-400">${formatDate(budget.period_start)} - ${formatDate(budget.period_end)}</p>
                 </div>
-              `;
-              })
-              .join("")}
+                ${statusBadge}
+              </div>
+              <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+                <div class="${progressColor} rounded-full h-3" style="width: ${Math.min(percent, 100)}%"></div>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-slate-400 mt-2 text-center">${percent.toFixed(1)}% utilized</p>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
+              <p class="font-semibold text-gray-900 dark:text-white mb-3">Category Breakdown</p>
+              <div id="category-chart-container" class="mb-3">
+                <canvas id="category-chart"></canvas>
+              </div>
+              <div class="space-y-2" id="category-list">
+                ${budget.category_allocations.map((cat) => {
+                  const catPercent = cat.utilization_percent || 0;
+                  const catColor = getProgressColor(catPercent);
+                  return `
+                    <div class="border-b border-gray-200 dark:border-slate-700 pb-2 last:border-0">
+                      <div class="flex justify-between items-center mb-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">${cat.category_name}</p>
+                        <p class="text-xs font-medium text-gray-600 dark:text-slate-400">${catPercent.toFixed(0)}%</p>
+                      </div>
+                      <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+                        <div class="${catColor} rounded-full h-2" style="width: ${Math.min(catPercent, 100)}%"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    `;
+        `;
 
         document.getElementById("active-budget-container").innerHTML = html;
-
-        // Render chart AFTER DOM update
         setTimeout(() => renderCategoryChart(budget.category_allocations), 100);
       }
 
-      // Render category chart - FIXED VERSION with instance management
       function renderCategoryChart(allocations) {
         const ctx = document.getElementById("category-chart");
         if (!ctx) return;
 
-        // CRITICAL FIX: Destroy existing chart before creating new one
         if (currentChart) {
           currentChart.destroy();
           currentChart = null;
         }
 
-        // Create new chart instance and store reference
         currentChart = new Chart(ctx, {
           type: "doughnut",
           data: {
             labels: allocations.map((a) => a.category_name),
-            datasets: [
-              {
-                data: allocations.map((a) => a.spent_amount || 0),
-                backgroundColor: [
-                  "#3b82f6",
-                  "#10b981",
-                  "#f59e0b",
-                  "#ef4444",
-                  "#8b5cf6",
-                  "#ec4899",
-                  "#14b8a6",
-                  "#f97316",
-                  "#06b6d4",
-                  "#84cc16",
-                ],
-              },
-            ],
+            datasets: [{
+              data: allocations.map((a) => a.spent_amount || 0),
+              backgroundColor: [
+                "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
+                "#ec4899", "#14b8a6", "#f97316", "#06b6d4", "#84cc16",
+              ],
+            }],
           },
           options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: {
-              legend: {
-                position: "bottom",
-              },
-            },
+            plugins: { legend: { position: "bottom" } },
           },
         });
       }
 
-      // Render budget list
       function renderBudgetList(data) {
+        const container = document.getElementById("budget-list-container");
         if (!data.budgets || data.budgets.length === 0) {
-          document.getElementById("budget-list-container").innerHTML = `
-        <div class="text-center py-12">
-          <div class="text-6xl mb-4">📋</div>
-          <p class="text-gray-600">No budgets created yet</p>
-        </div>
-      `;
+          container.innerHTML = '<div class="text-center py-8"><div class="text-4xl mb-2">📋</div><p class="text-gray-600 dark:text-slate-400">No budgets yet</p></div>';
           return;
         }
 
-        const html = data.budgets
+        container.innerHTML = data.budgets
           .map((budget) => {
             const percent = budget.overall_utilization_percent || 0;
             const progressColor = getProgressColor(percent);
             const statusBadge = getStatusBadge(percent, budget.is_active);
 
             return `
-        <div class="border-b border-gray-200 p-6 hover:bg-gray-50 transition-colors">
-          <div class="flex justify-between items-start mb-3">
-            <div>
-              <h4 class="text-lg font-semibold text-gray-900">${
-                budget.name
-              }</h4>
-              <p class="text-sm text-gray-600">${formatDate(
-                budget.period_start
-              )} - ${formatDate(budget.period_end)}</p>
-            </div>
-            <div class="flex gap-2">
-              ${statusBadge}
-              <button onclick="editBudget(${
-                budget.id
-              })" class="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm font-medium">
-                Edit
-              </button>
-              <button onclick="deleteBudget(${budget.id}, '${
-              budget.name
-            }')" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-sm font-medium">
-                Delete
-              </button>
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-4 mb-3">
-            <div class="text-center">
-              <div class="text-xs text-gray-600 mb-1">Budget</div>
-              <div class="text-lg font-semibold text-gray-900">${formatCurrency(
-                budget.total_budget
-              )}</div>
-            </div>
-            <div class="text-center">
-              <div class="text-xs text-gray-600 mb-1">Spent</div>
-              <div class="text-lg font-semibold text-gray-900">${formatCurrency(
-                budget.total_spent
-              )}</div>
-            </div>
-            <div class="text-center">
-              <div class="text-xs text-gray-600 mb-1">Remaining</div>
-              <div class="text-lg font-semibold text-gray-900">${formatCurrency(
-                budget.total_remaining
-              )}</div>
-            </div>
-          </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="${progressColor} rounded-full h-2" style="width: ${Math.min(
-              percent,
-              100
-            )}%"></div>
-          </div>
-          <div class="text-center text-sm text-gray-600 mt-1">${percent.toFixed(
-            1
-          )}% utilized</div>
-        </div>
-      `;
+              <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-3">
+                <div class="flex justify-between items-start mb-2">
+                  <div>
+                    <p class="font-semibold text-gray-900 dark:text-white">${budget.name}</p>
+                    <p class="text-xs text-gray-600 dark:text-slate-400">${formatDate(budget.period_start)} - ${formatDate(budget.period_end)}</p>
+                  </div>
+                  <div class="flex gap-1">
+                    ${statusBadge}
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                  <div class="text-center">
+                    <p class="text-xs text-gray-600 dark:text-slate-400">Budget</p>
+                    <p class="text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(budget.total_budget)}</p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-xs text-gray-600 dark:text-slate-400">Spent</p>
+                    <p class="text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(budget.total_spent)}</p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-xs text-gray-600 dark:text-slate-400">Left</p>
+                    <p class="text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(budget.total_remaining)}</p>
+                  </div>
+                </div>
+                
+                <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 mb-1">
+                  <div class="${progressColor} rounded-full h-2" style="width: ${Math.min(percent, 100)}%"></div>
+                </div>
+                <p class="text-xs text-gray-600 dark:text-slate-400 text-center">${percent.toFixed(1)}% used</p>
+                
+                <div class="flex gap-2 mt-3">
+                  <button onclick="editBudget(${budget.id})" class="flex-1 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50">
+                    Edit
+                  </button>
+                  <button onclick="deleteBudget(${budget.id}, '${budget.name}')" class="flex-1 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-xs font-medium hover:bg-red-200 dark:hover:bg-red-900/50">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            `;
           })
           .join("");
-
-        document.getElementById("budget-list-container").innerHTML = html;
       }
 
       // Modal functions
@@ -699,56 +583,38 @@
         document.getElementById("modal-title").textContent = "Create Budget";
         document.getElementById("budget-form").reset();
         document.getElementById("budget-id").value = "";
-        document.getElementById("category-allocations-container").innerHTML =
-          "";
-        document.getElementById("budget-modal").classList.remove("hidden");
+        document.getElementById("category-allocations-container").innerHTML = "";
+        document.getElementById("form-error").textContent = "";
 
-        // Set default dates
         const now = new Date();
         const start = new Date(now.getFullYear(), now.getMonth(), 1);
         const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        document.getElementById("period_start").value = start
-          .toISOString()
-          .split("T")[0];
-        document.getElementById("period_end").value = end
-          .toISOString()
-          .split("T")[0];
+        document.getElementById("period_start").value = start.toISOString().split("T")[0];
+        document.getElementById("period_end").value = end.toISOString().split("T")[0];
+
+        document.getElementById("budget-modal").classList.remove("hidden");
       }
 
       function closeModal() {
         document.getElementById("budget-modal").classList.add("hidden");
-        document.getElementById("form-error").textContent = "";
       }
 
-      // Category allocation management
       let allocationCounter = 0;
       function addCategoryAllocation(categoryId = "", amount = "") {
-        const container = document.getElementById(
-          "category-allocations-container"
-        );
+        const container = document.getElementById("category-allocations-container");
         const id = allocationCounter++;
 
         const row = document.createElement("div");
         row.className = "flex gap-2 items-center";
         row.id = `allocation-${id}`;
         row.innerHTML = `
-      <select name="category_id_${id}" required class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-        <option value="">Select Category</option>
-        ${categories
-          .map(
-            (cat) =>
-              `<option value="${cat.id}" ${
-                cat.id == categoryId ? "selected" : ""
-              }>${cat.name}</option>`
-          )
-          .join("")}
-      </select>
-      <input type="number" name="allocated_amount_${id}" placeholder="Amount" step="0.01" value="${amount}" required 
-        class="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-      <button type="button" onclick="removeAllocation(${id})" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium">
-        ×
-      </button>
-    `;
+          <select name="category_id_${id}" required class="flex-1 px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:border-green-500 dark:focus:border-green-400">
+            <option value="">Category</option>
+            ${categories.map((c) => `<option value="${c.id}" ${c.id == categoryId ? "selected" : ""}>${c.name}</option>`).join("")}
+          </select>
+          <input type="number" name="allocated_amount_${id}" placeholder="Amt" step="0.01" value="${amount}" required class="w-20 px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-400 focus:border-green-500 dark:focus:border-green-400">
+          <button type="button" onclick="removeAllocation(${id})" class="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-sm">×</button>
+        `;
         container.appendChild(row);
       }
 
@@ -756,22 +622,16 @@
         document.getElementById(`allocation-${id}`).remove();
       }
 
-      // Submit budget - IMPROVED VERSION with better feedback
       async function submitBudget(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
         const budgetId = formData.get("budget_id");
 
-        // Collect category allocations
         const categoryAllocations = [];
-        const container = document.getElementById(
-          "category-allocations-container"
-        );
-        const allocationItems = container.querySelectorAll(
-          'div[id^="allocation-"]'
-        );
+        const container = document.getElementById("category-allocations-container");
+        const allocations = container.querySelectorAll('div[id^="allocation-"]');
 
-        allocationItems.forEach((item) => {
+        allocations.forEach((item) => {
           const select = item.querySelector("select");
           const input = item.querySelector('input[type="number"]');
           if (select.value && input.value) {
@@ -787,28 +647,17 @@
           period_start: formData.get("period_start"),
           period_end: formData.get("period_end"),
           total_budget: parseFloat(formData.get("total_budget")),
-          needs_budget: formData.get("needs_budget")
-            ? parseFloat(formData.get("needs_budget"))
-            : null,
-          wants_budget: formData.get("wants_budget")
-            ? parseFloat(formData.get("wants_budget"))
-            : null,
-          savings_budget: formData.get("savings_budget")
-            ? parseFloat(formData.get("savings_budget"))
-            : null,
-          alert_threshold_percent: parseInt(
-            formData.get("alert_threshold_percent")
-          ),
+          needs_budget: formData.get("needs_budget") ? parseFloat(formData.get("needs_budget")) : null,
+          wants_budget: formData.get("wants_budget") ? parseFloat(formData.get("wants_budget")) : null,
+          savings_budget: formData.get("savings_budget") ? parseFloat(formData.get("savings_budget")) : null,
+          alert_threshold_percent: parseInt(formData.get("alert_threshold_percent")),
           is_active: true,
           category_allocations: categoryAllocations,
         };
 
         try {
-          const url = budgetId
-            ? `${API_BASE}/budgets/${budgetId}`
-            : `${API_BASE}/budgets`;
+          const url = budgetId ? `${API_BASE}/budgets/${budgetId}` : `${API_BASE}/budgets`;
           const method = budgetId ? "PUT" : "POST";
-
           const response = await fetch(url, {
             method: method,
             headers: {
@@ -820,33 +669,22 @@
 
           if (response.ok) {
             closeModal();
-            showToast(
-              budgetId
-                ? "Budget updated successfully!"
-                : "Budget created successfully!",
-              "success"
-            );
-
-            // Reload budgets with the new function
+            showToast(budgetId ? "Budget updated!" : "Budget created!", "success");
             setTimeout(() => reloadBudgets(), 300);
           } else {
             const error = await response.json();
-            document.getElementById("form-error").textContent =
-              error.detail || "Failed to save budget";
+            document.getElementById("form-error").textContent = error.detail || "Error saving budget";
           }
         } catch (error) {
-          document.getElementById("form-error").textContent =
-            "Network error. Please try again.";
+          document.getElementById("form-error").textContent = "Network error";
         }
       }
 
-      // Edit budget
       async function editBudget(budgetId) {
         try {
           const response = await fetch(`${API_BASE}/budgets/${budgetId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-
           if (response.ok) {
             const budget = await response.json();
             document.getElementById("modal-title").textContent = "Edit Budget";
@@ -855,18 +693,13 @@
             document.getElementById("period_start").value = budget.period_start;
             document.getElementById("period_end").value = budget.period_end;
             document.getElementById("total_budget").value = budget.total_budget;
-            document.getElementById("needs_budget").value =
-              budget.needs_budget || "";
-            document.getElementById("wants_budget").value =
-              budget.wants_budget || "";
-            document.getElementById("savings_budget").value =
-              budget.savings_budget || "";
-            document.getElementById("alert_threshold_percent").value =
-              budget.alert_threshold_percent;
+            document.getElementById("needs_budget").value = budget.needs_budget || "";
+            document.getElementById("wants_budget").value = budget.wants_budget || "";
+            document.getElementById("savings_budget").value = budget.savings_budget || "";
+            document.getElementById("alert_threshold_percent").value = budget.alert_threshold_percent;
 
-            document.getElementById(
-              "category-allocations-container"
-            ).innerHTML = "";
+            document.getElementById("category-allocations-container").innerHTML = "";
+            allocationCounter = 0;
             budget.category_allocations.forEach((alloc) => {
               addCategoryAllocation(alloc.category_id, alloc.allocated_amount);
             });
@@ -874,37 +707,36 @@
             document.getElementById("budget-modal").classList.remove("hidden");
           }
         } catch (error) {
-          showToast("Failed to load budget details", "error");
+          showToast("Failed to load budget", "error");
         }
       }
 
-      // Delete budget - IMPROVED VERSION with better feedback
       async function deleteBudget(budgetId, budgetName) {
-        if (!confirm(`Are you sure you want to delete "${budgetName}"?`))
-          return;
+        if (!confirm(`Delete "${budgetName}"?`)) return;
 
         try {
           const response = await fetch(`${API_BASE}/budgets/${budgetId}`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
           });
-
           if (response.ok) {
-            showToast("Budget deleted successfully!", "success");
-
-            // Reload budgets with the new function
+            showToast("Budget deleted!", "success");
             setTimeout(() => reloadBudgets(), 300);
           } else {
             showToast("Failed to delete budget", "error");
           }
         } catch (error) {
-          showToast("Network error. Please try again.", "error");
+          showToast("Error", "error");
         }
       }
 
+      document.getElementById("budget-form").addEventListener("submit", submitBudget);
+
       // Initialize
+      updateThemeIcons();
       loadUserEmail();
       loadCategories();
+      reloadBudgets();
     </script>
   </body>
 </html>
