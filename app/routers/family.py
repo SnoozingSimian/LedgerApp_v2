@@ -633,6 +633,18 @@ async def set_active_family(
     return {"message": "Active family set", "family_id": family_id}
 
 
+@router.post("/families/clear-active")
+async def clear_active_family(
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Clear active family, switch back to personal mode."""
+    current_user.active_family_id = None
+    await session.commit()
+
+    return {"message": "Switched to personal mode", "family_id": None}
+
+
 @router.get("/user/active-family")
 async def get_active_family(
     current_user: User = Depends(get_current_active_user),
