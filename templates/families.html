@@ -222,7 +222,7 @@
         </div>
 
         <!-- Pending Invites Section -->
-        <div id="pending-invites-details" class="mb-6 hidden">
+        <div id="pending-invites-details" class="mb-6">
           <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Pending Invites</h4>
           <div id="pending-invites-list" class="space-y-2">
             <!-- Filled by JS -->
@@ -454,20 +454,22 @@
             // Load members
             const membersList = document.getElementById("members-list");
             membersList.innerHTML = "";
-            family.members.forEach((member) => {
-              const memberDiv = document.createElement("div");
-              memberDiv.className = "flex justify-between items-center p-3 bg-gray-50 dark:bg-slate-700 rounded-lg";
-              const userName = member.user ? member.user.full_name : "Pending user";
-              const userEmail = member.user ? member.user.email : "(awaiting signup)";
-              memberDiv.innerHTML = `
-                <div>
-                  <p class="font-medium text-gray-900 dark:text-white">${userName}</p>
-                  <p class="text-xs text-gray-600 dark:text-slate-400">${userEmail}</p>
-                </div>
-                <span class="text-xs px-2 py-1 rounded-full ${member.role === 'admin' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}">${member.role}</span>
-              `;
-              membersList.appendChild(memberDiv);
-            });
+            if (family.members && family.members.length > 0) {
+              family.members.forEach((member) => {
+                const memberDiv = document.createElement("div");
+                memberDiv.className = "flex justify-between items-center p-3 bg-gray-50 dark:bg-slate-700 rounded-lg";
+                const userName = member.user ? member.user.full_name : "Pending user";
+                const userEmail = member.user ? member.user.email : "(awaiting signup)";
+                memberDiv.innerHTML = `
+                  <div>
+                    <p class="font-medium text-gray-900 dark:text-white">${userName}</p>
+                    <p class="text-xs text-gray-600 dark:text-slate-400">${userEmail}</p>
+                  </div>
+                  <span class="text-xs px-2 py-1 rounded-full ${member.role === 'admin' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}">${member.role}</span>
+                `;
+                membersList.appendChild(memberDiv);
+              });
+            }
 
             // Load pending invites
             const invitesResponse = await fetch(`${API_BASE}/families/${familyId}/invites`, {
@@ -476,17 +478,17 @@
 
             if (invitesResponse.ok) {
               const invites = await invitesResponse.json();
-              if (invites.length > 0) {
-                document.getElementById("pending-invites-details").classList.remove("hidden");
-                const invitesList = document.getElementById("pending-invites-list");
-                invitesList.innerHTML = "";
+              const invitesList = document.getElementById("pending-invites-list");
+              invitesList.innerHTML = "";
+              
+              if (invites && invites.length > 0) {
                 invites.forEach((invite) => {
                   const inviteDiv = document.createElement("div");
                   inviteDiv.className = "flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg";
                   inviteDiv.innerHTML = `
                     <div>
                       <p class="font-medium text-gray-900 dark:text-white">${invite.invited_email}</p>
-                      <p class="text-xs text-gray-600 dark:text-slate-400">Pending...</p>
+                      <p class="text-xs text-gray-600 dark:text-slate-400">Invited as ${invite.role} - Pending...</p>
                     </div>
                     <button
                       onclick="cancelInvite(${familyId}, ${invite.id})"
@@ -498,12 +500,13 @@
                   invitesList.appendChild(inviteDiv);
                 });
               } else {
-                document.getElementById("pending-invites-details").classList.add("hidden");
+                invitesList.innerHTML = '<p class="text-sm text-gray-600 dark:text-slate-400">No pending invites</p>';
               }
             }
           }
         } catch (error) {
           console.error("Error loading family details:", error);
+          alert("Failed to load family details");
         }
       }
 
