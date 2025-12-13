@@ -1,5 +1,6 @@
 # app/main.py
 
+from dotenv import load_dotenv
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +11,8 @@ import logging
 
 from app.database import engine
 from app.routers import auth, transactions, budgets, categories, credit_sources, family
+
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
