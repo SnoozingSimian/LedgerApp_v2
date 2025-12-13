@@ -45,6 +45,19 @@ async def backfill_families():
         "DATABASE_URL", "sqlite+aiosqlite:///./test.db"
     )
 
+    # Ensure we use asyncpg driver (async)
+    if "postgresql" in database_url:
+        # Strip old parameters, add asyncpg-compatible ones
+        if "?" in database_url:
+            base_url = database_url.split("?")[0]
+            database_url = f"{base_url}?ssl=require"
+        
+        # Convert to asyncpg protocol
+        if "psycopg2" in database_url:
+            database_url = database_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://")
+        elif database_url.startswith("postgresql://"):
+            database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
     # Create engine
     engine = create_async_engine(database_url, echo=False)
 
