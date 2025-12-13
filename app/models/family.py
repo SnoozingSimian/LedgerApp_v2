@@ -42,6 +42,7 @@ class Family(Base):
     )
     tags = relationship("Tag", back_populates="family", lazy="select")
     categories = relationship("Category", back_populates="family", lazy="select")
+    credit_sources = relationship("CreditSource", back_populates="family", lazy="select")
 
 
 class FamilyMember(Base):

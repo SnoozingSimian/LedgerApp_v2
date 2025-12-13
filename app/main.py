@@ -108,6 +108,12 @@ async def budgets_page(request: Request):
     return templates.TemplateResponse("budgets.html", {"request": request})
 
 
+@app.get("/families", response_class=HTMLResponse)
+async def families_page(request: Request):
+    """Serve families management page."""
+    return templates.TemplateResponse("families.html", {"request": request})
+
+
 @app.get("/credit-cards", response_class=HTMLResponse)
 async def credit_cards_page(request: Request):
     """Serve credit cards management page."""
