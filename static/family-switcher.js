@@ -120,10 +120,13 @@ const FamilySwitcher = {
       ${this.currentActiveFamilyId === null ? '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
     `;
     personalItem.disabled = this.currentActiveFamilyId === null;
-    personalItem.addEventListener('click', () => {
-      if (this.currentActiveFamilyId === null) return;
-      this.switchToPersonal();
-    });
+    if (this.currentActiveFamilyId !== null) {
+      personalItem.style.cursor = 'pointer';
+      personalItem.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.switchToPersonal();
+      });
+    }
     itemsContainer.appendChild(personalItem);
 
     // Family separator
@@ -150,10 +153,13 @@ const FamilySwitcher = {
         ${isActive ? '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
       `;
       item.disabled = isActive;
-      item.addEventListener('click', () => {
-        if (isActive) return;
-        this.switchToFamily(family.id);
-      });
+      if (!isActive) {
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.switchToFamily(family.id);
+        });
+      }
       itemsContainer.appendChild(item);
     });
   },
@@ -218,26 +224,40 @@ const FamilySwitcher = {
 
   /**
    * Switch to personal (no family)
+   * Clears active family by calling the clear endpoint
    */
   async switchToPersonal() {
     try {
-      const response = await fetch(`${this.API_BASE}/families/0/set-active`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${this.token}` },
-      });
-
-      // Even if it fails, we can just clear by setting to null
+      // Try the clear-active endpoint first (if implemented)
+      try {
+        const clearResponse = await fetch(`${this.API_BASE}/families/clear-active`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${this.token}` },
+        });
+        
+        if (clearResponse.ok) {
+          this.currentActiveFamilyId = null;
+          this.updateDisplay();
+          this.close();
+          window.location.reload();
+          return;
+        }
+      } catch (clearError) {
+        console.log('Clear endpoint not available, trying alternative approach');
+      }
+      
+      // Fallback: Just update UI and reload
+      // The backend will see no family_id in the filter and show personal transactions
+      console.warn('Using client-side personal mode switch (clear endpoint not implemented)');
       this.currentActiveFamilyId = null;
       this.updateDisplay();
       this.close();
+      
+      // Still reload to ensure fresh data
       window.location.reload();
     } catch (error) {
-      console.error('Note: Personal mode might not have explicit endpoint', error);
-      // Fallback: just update UI and reload
-      this.currentActiveFamilyId = null;
-      this.updateDisplay();
-      this.close();
-      window.location.reload();
+      console.error('Error switching to personal mode:', error);
+      alert('Error switching to personal mode');
     }
   },
 
