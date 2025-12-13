@@ -19,7 +19,7 @@ __all__ = [
     "MerchantCategory",
     "Family",
     "FamilyMember",
-    "FamilyInvite"
+    "FamilyInvite",
     "Tag",
     "CreditSource",
     "Transaction",
