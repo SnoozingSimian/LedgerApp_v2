@@ -2,14 +2,17 @@
 <html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <meta name="theme-color" content="#0f172a" />
     <title>Families - LedgerApp</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: 'class',
-      }
+        darkMode: "class",
+      };
     </script>
     <script src="/static/dark-mode.js"></script>
     <style>
@@ -26,11 +29,11 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #475569;
       }
-      
+
       body.dark ::-webkit-scrollbar-thumb {
         background: #475569;
       }
-      
+
       body.dark ::-webkit-scrollbar-thumb:hover {
         background: #64748b;
       }
@@ -43,12 +46,18 @@
       }
     </style>
   </head>
-  <body class="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 min-h-screen pb-24">
+  <body
+    class="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 min-h-screen pb-24"
+  >
     <!-- Header -->
-    <header class="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm">
+    <header
+      class="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm"
+    >
       <div class="px-4 py-4 flex justify-between items-center">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Families</h1>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+            Families
+          </h1>
         </div>
         <div class="flex items-center gap-3">
           <button
@@ -56,11 +65,27 @@
             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
             aria-label="Toggle dark mode"
           >
-            <svg id="sun-icon" class="w-5 h-5 text-yellow-500 hidden" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 18a6 6 0 100-12 6 6 0 000 12zM12 2v4m0 12v4M4.22 4.22l2.83 2.83m4.24 4.24l2.83 2.83M2 12h4m12 0h4m-4.22-7.78l2.83-2.83m-4.24 4.24l2.83-2.83" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <svg
+              id="sun-icon"
+              class="w-5 h-5 text-yellow-500 hidden"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M12 18a6 6 0 100-12 6 6 0 000 12zM12 2v4m0 12v4M4.22 4.22l2.83 2.83m4.24 4.24l2.83 2.83M2 12h4m12 0h4m-4.22-7.78l2.83-2.83m-4.24 4.24l2.83-2.83"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-linecap="round"
+              />
             </svg>
-            <svg id="moon-icon" class="w-5 h-5 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+            <svg
+              id="moon-icon"
+              class="w-5 h-5 text-slate-400"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
             </svg>
           </button>
           <button
@@ -68,8 +93,18 @@
             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-red-600 dark:text-red-400"
             aria-label="Logout"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
             </svg>
           </button>
         </div>
@@ -80,16 +115,25 @@
     <main class="px-4 py-6 max-w-4xl mx-auto">
       <!-- Active Family Card -->
       <div class="mb-6">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Active Family</h2>
-        <div id="active-family-card" class="bg-gradient-to-br from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700 rounded-lg p-6 text-white shadow-md">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+          Active Family
+        </h2>
+        <div
+          id="active-family-card"
+          class="bg-gradient-to-br from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700 rounded-lg p-6 text-white shadow-md"
+        >
           <p id="active-family-name" class="text-2xl font-bold mb-2">-</p>
-          <p class="text-indigo-100 text-sm">Current active family for all transactions</p>
+          <p class="text-indigo-100 text-sm">
+            Current active family for all transactions
+          </p>
         </div>
       </div>
 
       <!-- Pending Invites -->
       <div id="pending-invites-section" class="mb-6 hidden">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Pending Invites</h2>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+          Pending Invites
+        </h2>
         <div id="pending-invites-container" class="space-y-3">
           <!-- Filled by JS -->
         </div>
@@ -98,7 +142,9 @@
       <!-- Your Families -->
       <div class="mb-6">
         <div class="flex justify-between items-center mb-3">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Your Families</h2>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Your Families
+          </h2>
           <button
             id="create-family-btn"
             class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -113,29 +159,65 @@
     </main>
 
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 shadow-2xl z-50 safe-bottom">
+    <nav
+      class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 shadow-2xl z-50 safe-bottom"
+    >
       <div class="flex justify-around">
-        <a href="/dashboard" class="flex-1 flex flex-col items-center justify-center py-4 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 transition-colors active:bg-gray-50 dark:active:bg-slate-700/50">
+        <a
+          href="/dashboard"
+          class="flex-1 flex flex-col items-center justify-center py-4 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 transition-colors active:bg-gray-50 dark:active:bg-slate-700/50"
+        >
           <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
           </svg>
           <span class="text-xs font-medium">Home</span>
         </a>
-        <a href="/transactions" class="flex-1 flex flex-col items-center justify-center py-4 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 transition-colors active:bg-gray-50 dark:active:bg-slate-700/50">
-          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <a
+          href="/transactions"
+          class="flex-1 flex flex-col items-center justify-center py-4 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 transition-colors active:bg-gray-50 dark:active:bg-slate-700/50"
+        >
+          <svg
+            class="w-6 h-6 mb-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
           </svg>
           <span class="text-xs font-medium">Transactions</span>
         </a>
-        <a href="/budgets" class="flex-1 flex flex-col items-center justify-center py-4 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 transition-colors active:bg-gray-50 dark:active:bg-slate-700/50">
-          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        <a
+          href="/budgets"
+          class="flex-1 flex flex-col items-center justify-center py-4 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 transition-colors active:bg-gray-50 dark:active:bg-slate-700/50"
+        >
+          <svg
+            class="w-6 h-6 mb-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+            />
           </svg>
           <span class="text-xs font-medium">Budgets</span>
         </a>
-        <a href="/families" class="flex-1 flex flex-col items-center justify-center py-4 text-blue-600 dark:text-blue-400 border-t-2 border-blue-600 dark:border-blue-400 transition-colors active:bg-blue-50 dark:active:bg-slate-700/50">
+        <a
+          href="/families"
+          class="flex-1 flex flex-col items-center justify-center py-4 text-blue-600 dark:text-blue-400 border-t-2 border-blue-600 dark:border-blue-400 transition-colors active:bg-blue-50 dark:active:bg-slate-700/50"
+        >
           <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            <path
+              d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+            />
           </svg>
           <span class="text-xs font-medium">Families</span>
         </a>
@@ -143,20 +225,47 @@
     </nav>
 
     <!-- Create Family Modal -->
-    <div id="create-family-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div class="hidden absolute inset-0 bg-black bg-opacity-50" id="modal-backdrop" onclick="closeCreateFamilyModal()"></div>
-      <div class="bg-white dark:bg-slate-800 rounded-t-xl sm:rounded-lg w-full sm:max-w-md p-6 sm:shadow-2xl relative z-10 safe-bottom">
+    <div
+      id="create-family-modal"
+      class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+    >
+      <div
+        class="hidden absolute inset-0 bg-black bg-opacity-50"
+        id="modal-backdrop"
+        onclick="closeCreateFamilyModal()"
+      ></div>
+      <div
+        class="bg-white dark:bg-slate-800 rounded-t-xl sm:rounded-lg w-full sm:max-w-md p-6 sm:shadow-2xl relative z-10 safe-bottom"
+      >
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Create New Family</h3>
-          <button onclick="closeCreateFamilyModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+            Create New Family
+          </h3>
+          <button
+            onclick="closeCreateFamilyModal()"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
         <form id="create-family-form" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Family Name</label>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1"
+              >Family Name</label
+            >
             <input
               type="text"
               id="family-name"
@@ -166,10 +275,14 @@
             />
           </div>
           <div class="space-y-3">
-            <p class="text-sm font-medium text-gray-700 dark:text-slate-300">Import Existing Data?</p>
+            <p class="text-sm font-medium text-gray-700 dark:text-slate-300">
+              Import Existing Data?
+            </p>
             <label class="flex items-center">
               <input type="checkbox" id="import-data" class="rounded" />
-              <span class="ml-2 text-sm text-gray-700 dark:text-slate-300">Import my current data to this family</span>
+              <span class="ml-2 text-sm text-gray-700 dark:text-slate-300"
+                >Import my current data to this family</span
+              >
             </label>
           </div>
           <div class="flex gap-2 pt-4">
@@ -192,14 +305,41 @@
     </div>
 
     <!-- Family Details Modal -->
-    <div id="family-details-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center overflow-y-auto">
-      <div class="hidden absolute inset-0 bg-black bg-opacity-50" id="details-modal-backdrop" onclick="closeFamilyDetailsModal()"></div>
-      <div class="bg-white dark:bg-slate-800 rounded-t-xl sm:rounded-lg w-full sm:max-w-2xl p-6 sm:shadow-2xl relative z-10 safe-bottom my-auto sm:my-0 max-h-screen overflow-y-auto">
+    <div
+      id="family-details-modal"
+      class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center overflow-y-auto"
+    >
+      <div
+        class="hidden absolute inset-0 bg-black bg-opacity-50"
+        id="details-modal-backdrop"
+        onclick="closeFamilyDetailsModal()"
+      ></div>
+      <div
+        class="bg-white dark:bg-slate-800 rounded-t-xl sm:rounded-lg w-full sm:max-w-2xl p-6 sm:shadow-2xl relative z-10 safe-bottom my-auto sm:my-0 max-h-screen overflow-y-auto"
+      >
         <div class="flex justify-between items-center mb-4">
-          <h3 id="details-family-name" class="text-xl font-semibold text-gray-900 dark:text-white">Family Details</h3>
-          <button onclick="closeFamilyDetailsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          <h3
+            id="details-family-name"
+            class="text-xl font-semibold text-gray-900 dark:text-white"
+          >
+            Family Details
+          </h3>
+          <button
+            onclick="closeFamilyDetailsModal()"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -223,7 +363,9 @@
 
         <!-- Pending Invites Section -->
         <div id="pending-invites-details" class="mb-6">
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Pending Invites</h4>
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+            Pending Invites
+          </h4>
           <div id="pending-invites-list" class="space-y-2">
             <!-- Filled by JS -->
           </div>
@@ -250,20 +392,47 @@
     </div>
 
     <!-- Invite Member Modal -->
-    <div id="invite-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div class="hidden absolute inset-0 bg-black bg-opacity-50" id="invite-modal-backdrop" onclick="closeInviteModal()"></div>
-      <div class="bg-white dark:bg-slate-800 rounded-t-xl sm:rounded-lg w-full sm:max-w-md p-6 sm:shadow-2xl relative z-10 safe-bottom">
+    <div
+      id="invite-modal"
+      class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+    >
+      <div
+        class="hidden absolute inset-0 bg-black bg-opacity-50"
+        id="invite-modal-backdrop"
+        onclick="closeInviteModal()"
+      ></div>
+      <div
+        class="bg-white dark:bg-slate-800 rounded-t-xl sm:rounded-lg w-full sm:max-w-md p-6 sm:shadow-2xl relative z-10 safe-bottom"
+      >
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Invite Member</h3>
-          <button onclick="closeInviteModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+            Invite Member
+          </h3>
+          <button
+            onclick="closeInviteModal()"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
         <form id="invite-form" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Email Address</label>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1"
+              >Email Address</label
+            >
             <input
               type="email"
               id="invite-email"
@@ -273,7 +442,10 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Role</label>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1"
+              >Role</label
+            >
             <select
               id="invite-role"
               class="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -323,7 +495,7 @@
       function updateThemeIcons() {
         const sunIcon = document.getElementById("sun-icon");
         const moonIcon = document.getElementById("moon-icon");
-        
+
         if (darkModeManager.isDarkMode) {
           sunIcon.classList.remove("hidden");
           moonIcon.classList.add("hidden");
@@ -341,103 +513,124 @@
       document.getElementById("logout-btn").addEventListener("click", logout);
 
       // Create Family
-      document.getElementById("create-family-btn").addEventListener("click", () => {
-        document.getElementById("create-family-modal").classList.remove("hidden");
-        document.getElementById("modal-backdrop").classList.remove("hidden");
-      });
+      document
+        .getElementById("create-family-btn")
+        .addEventListener("click", () => {
+          document
+            .getElementById("create-family-modal")
+            .classList.remove("hidden");
+          document.getElementById("modal-backdrop").classList.remove("hidden");
+        });
 
       function closeCreateFamilyModal() {
         document.getElementById("create-family-modal").classList.add("hidden");
         document.getElementById("modal-backdrop").classList.add("hidden");
       }
 
-      document.getElementById("create-family-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const familyName = document.getElementById("family-name").value;
-        const importData = document.getElementById("import-data").checked;
+      document
+        .getElementById("create-family-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const familyName = document.getElementById("family-name").value;
+          const importData = document.getElementById("import-data").checked;
 
-        try {
-          const response = await fetch(`${API_BASE}/families`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              name: familyName,
-              import_existing_data: importData,
-            }),
-          });
+          try {
+            const response = await fetch(`${API_BASE}/families`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                name: familyName,
+                import_existing_data: importData,
+              }),
+            });
 
-          if (response.ok) {
-            closeCreateFamilyModal();
-            document.getElementById("family-name").value = "";
-            document.getElementById("import-data").checked = false;
-            loadFamilies();
-          } else {
-            alert("Failed to create family");
+            if (response.ok) {
+              closeCreateFamilyModal();
+              document.getElementById("family-name").value = "";
+              document.getElementById("import-data").checked = false;
+              loadFamilies();
+            } else {
+              alert("Failed to create family");
+            }
+          } catch (error) {
+            console.error("Error creating family:", error);
+            alert("Error creating family");
           }
-        } catch (error) {
-          console.error("Error creating family:", error);
-          alert("Error creating family");
-        }
-      });
+        });
 
       // Invite Member
       function openInviteModal() {
         document.getElementById("invite-modal").classList.remove("hidden");
-        document.getElementById("invite-modal-backdrop").classList.remove("hidden");
+        document
+          .getElementById("invite-modal-backdrop")
+          .classList.remove("hidden");
       }
 
       function closeInviteModal() {
         document.getElementById("invite-modal").classList.add("hidden");
-        document.getElementById("invite-modal-backdrop").classList.add("hidden");
+        document
+          .getElementById("invite-modal-backdrop")
+          .classList.add("hidden");
       }
 
-      document.getElementById("invite-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const email = document.getElementById("invite-email").value;
-        const role = document.getElementById("invite-role").value;
+      document
+        .getElementById("invite-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const email = document.getElementById("invite-email").value;
+          const role = document.getElementById("invite-role").value;
 
-        try {
-          const response = await fetch(`${API_BASE}/families/${currentFamilyId}/members/invite`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              invited_email: email,
-              role: role,
-            }),
-          });
+          try {
+            const response = await fetch(
+              `${API_BASE}/families/${currentFamilyId}/members/invite`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  invited_email: email,
+                  role: role,
+                }),
+              }
+            );
 
-          if (response.ok) {
-            closeInviteModal();
-            document.getElementById("invite-email").value = "";
-            document.getElementById("invite-role").value = "member";
-            loadFamilyDetails(currentFamilyId);
-          } else {
-            const error = await response.json();
-            alert(error.detail || "Failed to send invite");
+            if (response.ok) {
+              closeInviteModal();
+              document.getElementById("invite-email").value = "";
+              document.getElementById("invite-role").value = "member";
+              loadFamilyDetails(currentFamilyId);
+            } else {
+              const error = await response.json();
+              alert(error.detail || "Failed to send invite");
+            }
+          } catch (error) {
+            console.error("Error sending invite:", error);
+            alert("Error sending invite");
           }
-        } catch (error) {
-          console.error("Error sending invite:", error);
-          alert("Error sending invite");
-        }
-      });
+        });
 
       // Family Details Modal
       async function openFamilyDetails(familyId) {
         currentFamilyId = familyId;
-        document.getElementById("family-details-modal").classList.remove("hidden");
-        document.getElementById("details-modal-backdrop").classList.remove("hidden");
+        document
+          .getElementById("family-details-modal")
+          .classList.remove("hidden");
+        document
+          .getElementById("details-modal-backdrop")
+          .classList.remove("hidden");
         await loadFamilyDetails(familyId);
       }
 
       function closeFamilyDetailsModal() {
         document.getElementById("family-details-modal").classList.add("hidden");
-        document.getElementById("details-modal-backdrop").classList.add("hidden");
+        document
+          .getElementById("details-modal-backdrop")
+          .classList.add("hidden");
         currentFamilyId = null;
       }
 
@@ -449,58 +642,77 @@
 
           if (response.ok) {
             const family = await response.json();
-            document.getElementById("details-family-name").textContent = family.name;
+            document.getElementById("details-family-name").textContent =
+              family.name;
 
             // Load members
             const membersList = document.getElementById("members-list");
             membersList.innerHTML = "";
             if (family.members && family.members.length > 0) {
-              family.members.forEach((member) => {
-                const memberDiv = document.createElement("div");
-                memberDiv.className = "flex justify-between items-center p-3 bg-gray-50 dark:bg-slate-700 rounded-lg";
-                const userName = member.user ? member.user.full_name : "Pending user";
-                const userEmail = member.user ? member.user.email : "(awaiting signup)";
-                memberDiv.innerHTML = `
-                  <div>
-                    <p class="font-medium text-gray-900 dark:text-white">${userName}</p>
-                    <p class="text-xs text-gray-600 dark:text-slate-400">${userEmail}</p>
-                  </div>
-                  <span class="text-xs px-2 py-1 rounded-full ${member.role === 'admin' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}">${member.role}</span>
-                `;
-                membersList.appendChild(memberDiv);
-              });
+              const validMembers = family.members.filter(
+                (member) => member.user
+              );
+
+              if (validMembers.length > 0) {
+                validMembers.forEach((member) => {
+                  const memberDiv = document.createElement("div");
+                  memberDiv.className =
+                    "flex justify-between items-center p-3 bg-gray-50 dark:bg-slate-700 rounded-lg";
+                  const userName = member.user.full_name;
+                  const userEmail = member.user.email;
+                  memberDiv.innerHTML = `
+                        <div>
+                          <p class="font-medium text-gray-900 dark:text-white">${userName}</p>
+                          <p class="text-xs text-gray-600 dark:text-slate-400">${userEmail}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full ${
+                          member.role === "admin"
+                            ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                            : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                        }">${member.role}</span>
+                      `;
+                  membersList.appendChild(memberDiv);
+                });
+              }
             }
 
             // Load pending invites
-            const invitesResponse = await fetch(`${API_BASE}/families/${familyId}/invites`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            const invitesResponse = await fetch(
+              `${API_BASE}/families/${familyId}/invites`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
 
             if (invitesResponse.ok) {
               const invites = await invitesResponse.json();
-              const invitesList = document.getElementById("pending-invites-list");
+              const invitesList = document.getElementById(
+                "pending-invites-list"
+              );
               invitesList.innerHTML = "";
-              
+
               if (invites && invites.length > 0) {
                 invites.forEach((invite) => {
                   const inviteDiv = document.createElement("div");
-                  inviteDiv.className = "flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg";
+                  inviteDiv.className =
+                    "flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg";
                   inviteDiv.innerHTML = `
-                    <div>
-                      <p class="font-medium text-gray-900 dark:text-white">${invite.invited_email}</p>
-                      <p class="text-xs text-gray-600 dark:text-slate-400">Invited as ${invite.role} - Pending...</p>
-                    </div>
-                    <button
-                      onclick="cancelInvite(${familyId}, ${invite.id})"
-                      class="text-xs px-2 py-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  `;
+                        <div>
+                          <p class="font-medium text-gray-900 dark:text-white">${invite.invited_email}</p>
+                          <p class="text-xs text-gray-600 dark:text-slate-400">Invited as ${invite.role} - Pending...</p>
+                        </div>
+                        <button
+                          onclick="cancelInvite(${familyId}, ${invite.id})"
+                          class="text-xs px-2 py-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      `;
                   invitesList.appendChild(inviteDiv);
                 });
               } else {
-                invitesList.innerHTML = '<p class="text-sm text-gray-600 dark:text-slate-400">No pending invites</p>';
+                membersList.innerHTML =
+                  '<p class="text-sm text-gray-600 dark:text-slate-400">No members yet</p>';
               }
             }
           }
@@ -512,10 +724,13 @@
 
       async function setActiveFamily() {
         try {
-          const response = await fetch(`${API_BASE}/families/${currentFamilyId}/set-active`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const response = await fetch(
+            `${API_BASE}/families/${currentFamilyId}/set-active`,
+            {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
 
           if (response.ok) {
             closeFamilyDetailsModal();
@@ -529,12 +744,19 @@
       }
 
       async function deleteFamily() {
-        if (confirm("Are you sure you want to delete this family? This action cannot be undone.")) {
+        if (
+          confirm(
+            "Are you sure you want to delete this family? This action cannot be undone."
+          )
+        ) {
           try {
-            const response = await fetch(`${API_BASE}/families/${currentFamilyId}`, {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            const response = await fetch(
+              `${API_BASE}/families/${currentFamilyId}`,
+              {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
 
             if (response.ok) {
               closeFamilyDetailsModal();
@@ -551,10 +773,13 @@
       async function cancelInvite(familyId, inviteId) {
         if (confirm("Cancel this invite?")) {
           try {
-            const response = await fetch(`${API_BASE}/families/${familyId}/invites/${inviteId}`, {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            const response = await fetch(
+              `${API_BASE}/families/${familyId}/invites/${inviteId}`,
+              {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
 
             if (response.ok) {
               loadFamilyDetails(familyId);
@@ -582,19 +807,20 @@
 
             families.forEach((family) => {
               const familyDiv = document.createElement("div");
-              familyDiv.className = "p-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-slate-900/50 cursor-pointer transition-all";
+              familyDiv.className =
+                "p-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-slate-900/50 cursor-pointer transition-all";
               familyDiv.onclick = () => openFamilyDetails(family.id);
               familyDiv.innerHTML = `
-                <div class="flex justify-between items-start">
-                  <div>
-                    <p class="font-semibold text-gray-900 dark:text-white">${family.name}</p>
-                    <p class="text-xs text-gray-600 dark:text-slate-400 mt-1">${family.members.length} members</p>
-                  </div>
-                  <svg class="w-5 h-5 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              `;
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <p class="font-semibold text-gray-900 dark:text-white">${family.name}</p>
+                        <p class="text-xs text-gray-600 dark:text-slate-400 mt-1">${family.members.length} members</p>
+                      </div>
+                      <svg class="w-5 h-5 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  `;
               container.appendChild(familyDiv);
             });
           }
@@ -606,46 +832,57 @@
 
           if (activeResponse.ok) {
             const activeFamily = await activeResponse.json();
-            document.getElementById("active-family-name").textContent = activeFamily.name;
+            document.getElementById("active-family-name").textContent =
+              activeFamily.name;
           }
 
           // Load pending invites
-          const invitesResponse = await fetch(`${API_BASE}/user/pending-invites`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const invitesResponse = await fetch(
+            `${API_BASE}/user/pending-invites`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
 
           if (invitesResponse.ok) {
             const invites = await invitesResponse.json();
             if (invites.length > 0) {
-              document.getElementById("pending-invites-section").classList.remove("hidden");
-              const container = document.getElementById("pending-invites-container");
+              document
+                .getElementById("pending-invites-section")
+                .classList.remove("hidden");
+              const container = document.getElementById(
+                "pending-invites-container"
+              );
               container.innerHTML = "";
 
               invites.forEach((invite) => {
                 const inviteDiv = document.createElement("div");
-                inviteDiv.className = "p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg";
+                inviteDiv.className =
+                  "p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg";
                 inviteDiv.innerHTML = `
-                  <p class="font-semibold text-gray-900 dark:text-white mb-1">${invite.family.name}</p>
-                  <p class="text-xs text-gray-600 dark:text-slate-400 mb-3">You've been invited as a ${invite.role}</p>
-                  <div class="flex gap-2">
-                    <button
-                      onclick="acceptInvite('${invite.token}')"
-                      class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
-                    >
-                      Accept
-                    </button>
-                    <button
-                      onclick="declineInvite('${invite.token}')"
-                      class="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-                    >
-                      Decline
-                    </button>
-                  </div>
-                `;
+                      <p class="font-semibold text-gray-900 dark:text-white mb-1">${invite.family.name}</p>
+                      <p class="text-xs text-gray-600 dark:text-slate-400 mb-3">You've been invited as a ${invite.role}</p>
+                      <div class="flex gap-2">
+                        <button
+                          onclick="acceptInvite('${invite.token}')"
+                          class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onclick="declineInvite('${invite.token}')"
+                          class="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    `;
                 container.appendChild(inviteDiv);
               });
             } else {
-              document.getElementById("pending-invites-section").classList.add("hidden");
+              document
+                .getElementById("pending-invites-section")
+                .classList.add("hidden");
             }
           }
         } catch (error) {
@@ -660,16 +897,24 @@
       async function acceptInvite(token) {
         try {
           // First get invite details
-          const getResponse = await fetch(`${API_BASE}/invites/${token}/accept`, {
-            method: "POST",
-          });
+          const getResponse = await fetch(
+            `${API_BASE}/invites/${token}/accept`,
+            {
+              method: "POST",
+            }
+          );
 
           if (getResponse.ok) {
             // Then confirm with auth
-            const confirmResponse = await fetch(`${API_BASE}/invites/${token}/accept/confirm`, {
-              method: "POST",
-              headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-            });
+            const confirmResponse = await fetch(
+              `${API_BASE}/invites/${token}/accept/confirm`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            );
 
             if (confirmResponse.ok) {
               loadFamilies();
