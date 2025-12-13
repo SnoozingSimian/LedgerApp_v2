@@ -1,5 +1,3 @@
-# app/routers/budgets.py
-
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
@@ -112,11 +110,16 @@ async def create_budget(
 ):
     """
     Create a new budget with category allocations.
+    If no family_id is provided, uses the active family from current user.
     """
+    # Use active family if not explicitly provided
+    family_id = budget_data.family_id or current_user.active_family_id
+    
     # Validate that period doesn't overlap with existing active budgets
     overlap_query = select(Budget).where(
         and_(
             Budget.user_id == current_user.id,
+            Budget.family_id == family_id,  # Only check within same family scope
             Budget.is_active == True,
             or_(
                 and_(
@@ -161,7 +164,7 @@ async def create_budget(
     # Create budget
     new_budget = Budget(
         user_id=current_user.id,
-        family_id=budget_data.family_id,
+        family_id=family_id,
         name=budget_data.name,
         period_start=budget_data.period_start,
         period_end=budget_data.period_end,
@@ -249,9 +252,17 @@ async def list_budgets(
 ):
     """
     List all budgets for the current user with pagination.
+    If a family is active, only shows budgets for that family.
+    If no family is active, only shows personal budgets (family_id=NULL).
     """
     # Build base query
     query = select(Budget).where(Budget.user_id == current_user.id)
+    
+    # Filter by active family
+    if current_user.active_family_id:
+        query = query.where(Budget.family_id == current_user.active_family_id)
+    else:
+        query = query.where(Budget.family_id.is_(None))
 
     if is_active is not None:
         query = query.where(Budget.is_active == is_active)
@@ -332,22 +343,29 @@ async def get_active_budget(
 ):
     """
     Get the currently active budget for the user.
+    Respects active family scope.
     """
     today = date.today()
+    
+    conditions = [
+        Budget.user_id == current_user.id,
+        Budget.is_active == True,
+        Budget.period_start <= today,
+        Budget.period_end >= today,
+    ]
+    
+    # Filter by active family
+    if current_user.active_family_id:
+        conditions.append(Budget.family_id == current_user.active_family_id)
+    else:
+        conditions.append(Budget.family_id.is_(None))
 
     query = (
         select(Budget)
         .options(
             selectinload(Budget.budget_categories).selectinload(BudgetCategory.category)
         )
-        .where(
-            and_(
-                Budget.user_id == current_user.id,
-                Budget.is_active == True,
-                Budget.period_start <= today,
-                Budget.period_end >= today,
-            )
-        )
+        .where(and_(*conditions))
     )
 
     result = await session.execute(query)
