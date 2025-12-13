@@ -1,5 +1,3 @@
-# app/routers/transactions.py
-
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -61,6 +59,10 @@ async def create_transaction(
     # Create transaction
     transaction_dict = transaction_data.model_dump(exclude={"tag_ids"})
     new_transaction = Transaction(**transaction_dict, user_id=current_user.id)
+    
+    # Associate with active family if set
+    if current_user.active_family_id:
+        new_transaction.family_id = current_user.active_family_id
 
     session.add(new_transaction)
     await session.flush()  # Get transaction ID
@@ -102,10 +104,22 @@ async def list_transactions(
     current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """List all transactions for the current user with filters and pagination."""
+    """List all transactions for the current user with filters and pagination.
+    
+    If a family is active, only transactions for that family are returned.
+    If no family is active, only personal transactions (family_id=NULL) are returned.
+    """
 
     # Build query
     query = select(Transaction).where(Transaction.user_id == current_user.id)
+    
+    # Filter by active family
+    if current_user.active_family_id:
+        # Show only family transactions
+        query = query.where(Transaction.family_id == current_user.active_family_id)
+    else:
+        # Show only personal transactions (no family)
+        query = query.where(Transaction.family_id.is_(None))
 
     # Apply filters
     if start_date:
@@ -348,6 +362,12 @@ async def get_transaction_summary(
 
     # Build WHERE conditions
     conditions = [Transaction.user_id == current_user.id]
+    
+    # Filter by active family
+    if current_user.active_family_id:
+        conditions.append(Transaction.family_id == current_user.active_family_id)
+    else:
+        conditions.append(Transaction.family_id.is_(None))
 
     if start_date:
         conditions.append(Transaction.t_date >= start_date)
@@ -444,9 +464,16 @@ async def export_transactions_xlsx(
 ):
     """
     Export transactions as XLSX file with optional filters.
+    Respects active family settings.
     """
     # Build query with same filters as list_transactions
     query = select(Transaction).where(Transaction.user_id == current_user.id)
+    
+    # Filter by active family
+    if current_user.active_family_id:
+        query = query.where(Transaction.family_id == current_user.active_family_id)
+    else:
+        query = query.where(Transaction.family_id.is_(None))
 
     # Apply filters
     if start_date:
