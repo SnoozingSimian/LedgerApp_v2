@@ -11,21 +11,25 @@ class Tag(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
+    
+    # User ownership
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    
+    # Family scoping 
     family_id = Column(
-        Integer, ForeignKey("families.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("families.id", ondelete="CASCADE"), index=True, nullable=True
     )
+    
+    # Visual styling
     color = Column(String(7))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
+    # All existing relationships
     user = relationship("User", back_populates="tags")
     family = relationship("Family", back_populates="tags")
     transactions = relationship("TransactionTag", back_populates="tag")
 
-    # Constraints
+    # Uniqueness constraint
     __table_args__ = (
-        UniqueConstraint(
-            "name", "user_id", "family_id", name="uq_tag_name_user_family"
-        ),
+        UniqueConstraint("name", "user_id", "family_id", name="uq_tag_name_user_family"),
     )

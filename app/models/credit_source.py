@@ -23,7 +23,10 @@ class CreditSource(Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     family_id = Column(
-        Integer, ForeignKey("families.id", ondelete="CASCADE"), index=True
+        Integer,
+        ForeignKey("families.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
     )
 
     card_name = Column(String(100), nullable=False)
@@ -40,6 +43,7 @@ class CreditSource(Base):
 
     # Relationships
     user = relationship("User", back_populates="credit_sources")
+    family = relationship("Family", back_populates="credit_sources", lazy="select")
     transactions = relationship("Transaction", back_populates="credit_source")
 
     # Constraints

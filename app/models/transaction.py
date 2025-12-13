@@ -25,7 +25,10 @@ class Transaction(Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     family_id = Column(
-        Integer, ForeignKey("families.id", ondelete="CASCADE"), index=True
+        Integer,
+        ForeignKey("families.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
     )
 
     # Financial details
@@ -66,7 +69,7 @@ class Transaction(Base):
 
     # Relationships
     user = relationship("User", back_populates="transactions")
-    family = relationship("Family", back_populates="transactions")
+    family = relationship("Family", back_populates="transactions", lazy="select")
     category = relationship(
         "Category", foreign_keys=[category_id], back_populates="transactions"
     )

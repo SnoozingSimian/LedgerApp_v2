@@ -2,6 +2,7 @@
 
 from app.models.user import User
 from app.models.family import Family, FamilyMember
+from app.models.invite import FamilyInvite
 from app.models.category import Category
 from app.models.merchant_category import MerchantCategory
 from app.models.tag import Tag
@@ -18,6 +19,7 @@ __all__ = [
     "MerchantCategory",
     "Family",
     "FamilyMember",
+    "FamilyInvite"
     "Tag",
     "CreditSource",
     "Transaction",

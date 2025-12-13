@@ -23,6 +23,12 @@ class Budget(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
     family_id = Column(
+        Integer,
+        ForeignKey("families.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    family_id = Column(
         Integer, ForeignKey("families.id", ondelete="CASCADE"), index=True
     )
 
@@ -47,7 +53,7 @@ class Budget(Base):
 
     # Relationships
     user = relationship("User", back_populates="budgets")
-    family = relationship("Family", back_populates="budgets")
+    family = relationship("Family", back_populates="budgets", lazy="select")
     budget_categories = relationship(
         "BudgetCategory", back_populates="budget", cascade="all, delete-orphan"
     )

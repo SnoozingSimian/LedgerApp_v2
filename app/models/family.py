@@ -1,4 +1,4 @@
-# app/models/family.py
+# app/models/family.py - COMPLETE UPDATED VERSION
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
@@ -23,6 +23,14 @@ class Family(Base):
         cascade="all, delete-orphan",
         lazy="select",
     )
+    
+    pending_invites = relationship(
+        "FamilyInvite",
+        back_populates="family",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
+    
     transactions = relationship("Transaction", back_populates="family", lazy="select")
     budgets = relationship("Budget", back_populates="family", lazy="select")
     assets = relationship("Asset", back_populates="family", lazy="select")
@@ -33,6 +41,7 @@ class Family(Base):
         "FinancialGoal", back_populates="family", lazy="select"
     )
     tags = relationship("Tag", back_populates="family", lazy="select")
+    categories = relationship("Category", back_populates="family", lazy="select")
 
 
 class FamilyMember(Base):
@@ -51,6 +60,6 @@ class FamilyMember(Base):
     role = Column(String(20), default="member")  # 'admin', 'member', 'viewer'
     joined_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships - use string references
+    # Relationships
     user = relationship("User", back_populates="family_memberships", lazy="select")
     family = relationship("Family", back_populates="members", lazy="select")

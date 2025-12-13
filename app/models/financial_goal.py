@@ -22,7 +22,10 @@ class FinancialGoal(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
     family_id = Column(
-        Integer, ForeignKey("families.id", ondelete="CASCADE"), index=True
+        Integer,
+        ForeignKey("families.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
     )
 
     goal_name = Column(String(200), nullable=False)
@@ -43,7 +46,7 @@ class FinancialGoal(Base):
 
     # Relationships
     user = relationship("User", back_populates="financial_goals")
-    family = relationship("Family", back_populates="financial_goals")
+    family = relationship("Family", back_populates="financial_goals", lazy="select")
 
     # Constraints
     __table_args__ = (

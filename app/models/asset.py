@@ -26,6 +26,12 @@ class Asset(Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     family_id = Column(
+        Integer,
+        ForeignKey("families.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    family_id = Column(
         Integer, ForeignKey("families.id", ondelete="CASCADE"), index=True
     )
 
@@ -57,7 +63,7 @@ class Asset(Base):
 
     # Relationships
     user = relationship("User", back_populates="assets")
-    family = relationship("Family", back_populates="assets")
+    family = relationship("Family", back_populates="assets", lazy="select")
     valuations = relationship(
         "AssetValuation", back_populates="asset", cascade="all, delete-orphan"
     )

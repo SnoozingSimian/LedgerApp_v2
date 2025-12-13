@@ -11,25 +11,24 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, unique=True)
+    
+    # Family support 
+    family_id = Column(
+        Integer,
+        ForeignKey("families.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    is_global = Column(Boolean, default=False)
+    
     parent_category_id = Column(Integer, ForeignKey("categories.id"), index=True)
-    category_type = Column(
-        String(20), nullable=False, index=True
-    )  # 'expense' or 'income'
-
-    # 50/30/20 budget classification
-    budget_classification = Column(String(20))  # 'needs', 'wants', 'savings'
-
-    # Visual identifiers
+    category_type = Column(String(20), nullable=False, index=True)
+    budget_classification = Column(String(20))
     icon = Column(String(50))
     color = Column(String(7))
-
-    # Merchant mapping for auto-categorization
-    default_mcc_ranges = Column(Text)  # JSON array of MCC ranges
-
-    # System vs custom categories
+    default_mcc_ranges = Column(Text)
     is_system = Column(Boolean, default=True)
     display_order = Column(Integer)
-
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
@@ -39,3 +38,6 @@ class Category(Base):
     )
     budget_allocations = relationship("BudgetCategory", back_populates="category")
     income_streams = relationship("IncomeStream", back_populates="category")
+    
+    # Family relationship
+    family = relationship("Family", back_populates="categories", lazy="select")

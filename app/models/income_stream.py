@@ -25,7 +25,10 @@ class IncomeStream(Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     family_id = Column(
-        Integer, ForeignKey("families.id", ondelete="CASCADE"), index=True
+        Integer,
+        ForeignKey("families.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
     )
 
     source = Column(String(200), nullable=False)
@@ -49,7 +52,7 @@ class IncomeStream(Base):
 
     # Relationships
     user = relationship("User", back_populates="income_streams")
-    family = relationship("Family", back_populates="income_streams")
+    family = relationship("Family", back_populates="income_streams", lazy="select")
     category = relationship("Category", back_populates="income_streams")
 
     # Constraints

@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 import logging
 
 from app.database import engine
-from app.routers import auth, transactions, budgets, categories, credit_sources
+from app.routers import auth, transactions, budgets, categories, credit_sources, family
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -124,3 +124,4 @@ app.include_router(categories.router, prefix="/api", tags=["Categories"])
 app.include_router(
     credit_sources.router, prefix="/api/credit-sources", tags=["Credit Sources"]
 )
+app.include_router(family.router, prefix="/api", tags=["Family"])
