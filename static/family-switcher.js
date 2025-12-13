@@ -94,49 +94,22 @@ const FamilySwitcher = {
 
     if (!buttonText || !itemsContainer) return;
 
-    // Update button text
-    if (this.currentActiveFamilyId) {
-      const activeFamily = this.families.find(f => f.id === this.currentActiveFamilyId);
-      if (activeFamily) {
-        buttonText.textContent = activeFamily.name;
-      }
+    // Update button text - get from active family or show "Loading..."
+    const activeFamily = this.families.find(f => f.id === this.currentActiveFamilyId);
+    if (activeFamily) {
+      buttonText.textContent = activeFamily.name;
+    } else if (this.families.length > 0) {
+      // Try to find Personal family if no active family
+      const personalFamily = this.families.find(f => f.name.toLowerCase() === 'personal');
+      buttonText.textContent = personalFamily ? personalFamily.name : 'Loading...';
     } else {
-      buttonText.textContent = 'Personal';
+      buttonText.textContent = 'Loading...';
     }
 
     // Update menu items
     itemsContainer.innerHTML = '';
 
-    // Personal option
-    const personalItem = document.createElement('button');
-    personalItem.className =
-      'w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-between group ' +
-      (this.currentActiveFamilyId === null ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white');
-    personalItem.innerHTML = `
-      <div>
-        <p class="font-medium">Personal</p>
-        <p class="text-xs opacity-70">Private transactions</p>
-      </div>
-      ${this.currentActiveFamilyId === null ? '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
-    `;
-    personalItem.disabled = this.currentActiveFamilyId === null;
-    if (this.currentActiveFamilyId !== null) {
-      personalItem.style.cursor = 'pointer';
-      personalItem.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.switchToPersonal();
-      });
-    }
-    itemsContainer.appendChild(personalItem);
-
-    // Family separator
-    if (this.families.length > 0) {
-      const separator = document.createElement('div');
-      separator.className = 'border-t border-gray-200 dark:border-slate-700 my-2';
-      itemsContainer.appendChild(separator);
-    }
-
-    // Family options
+    // Family options - only show families from API (no hardcoded Personal)
     this.families.forEach(family => {
       const item = document.createElement('button');
       const isActive = family.id === this.currentActiveFamilyId;
