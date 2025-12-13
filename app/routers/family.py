@@ -255,7 +255,7 @@ async def send_family_invite_endpoint(
             and_(
                 FamilyInvite.family_id == family_id,
                 FamilyInvite.invited_email == invite_data.invited_email,
-                not FamilyInvite.accepted,
+                FamilyInvite.accepted == False,
             )
         )
     )
@@ -335,7 +335,7 @@ async def list_family_invites(
         select(FamilyInvite)
         .where(
             and_(
-                FamilyInvite.family_id == family_id, not FamilyInvite.accepted
+                FamilyInvite.family_id == family_id, FamilyInvite.accepted == False
             )
         )
         .order_by(FamilyInvite.created_at.desc())
@@ -503,7 +503,7 @@ async def get_user_pending_invites(
         .where(
             and_(
                 FamilyInvite.invited_email == current_user.email,
-                not FamilyInvite.accepted,
+                FamilyInvite.accepted == False,
                 FamilyInvite.expires_at > datetime.utcnow(),
             )
         )
