@@ -26,11 +26,15 @@ async def create_credit_source(
     current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """Create a new credit source (credit card) for the current user."""
+    """Create a new credit source (credit card) for the current user.
+    
+    Automatically associates with the active family if one is set.
+    """
     
     new_credit_source = CreditSource(
         **credit_source_data.model_dump(),
         user_id=current_user.id,
+        family_id=current_user.active_family_id,  # Associate with active family
     )
     
     session.add(new_credit_source)
@@ -45,11 +49,23 @@ async def list_credit_sources(
     current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """List all credit sources for the current user."""
+    """List all credit sources for the current user.
+    
+    If a family is active, only shows credit sources for that family.
+    If no family is active, only shows personal credit sources (family_id=NULL).
+    """
+    
+    conditions = [CreditSource.user_id == current_user.id]
+    
+    # Filter by active family
+    if current_user.active_family_id:
+        conditions.append(CreditSource.family_id == current_user.active_family_id)
+    else:
+        conditions.append(CreditSource.family_id.is_(None))
     
     result = await session.execute(
         select(CreditSource)
-        .where(CreditSource.user_id == current_user.id)
+        .where(and_(*conditions))
         .order_by(CreditSource.card_name)
     )
     credit_sources = result.scalars().all()
@@ -62,16 +78,26 @@ async def list_active_credit_sources(
     current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """List all active credit sources for the current user."""
+    """List all active credit sources for the current user.
+    
+    If a family is active, only shows active credit sources for that family.
+    If no family is active, only shows personal active credit sources (family_id=NULL).
+    """
+    
+    conditions = [
+        CreditSource.user_id == current_user.id,
+        CreditSource.is_active == True,
+    ]
+    
+    # Filter by active family
+    if current_user.active_family_id:
+        conditions.append(CreditSource.family_id == current_user.active_family_id)
+    else:
+        conditions.append(CreditSource.family_id.is_(None))
     
     result = await session.execute(
         select(CreditSource)
-        .where(
-            and_(
-                CreditSource.user_id == current_user.id,
-                CreditSource.is_active == True,
-            )
-        )
+        .where(and_(*conditions))
         .order_by(CreditSource.card_name)
     )
     credit_sources = result.scalars().all()
