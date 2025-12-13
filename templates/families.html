@@ -344,6 +344,12 @@
           </button>
         </div>
 
+        <!-- Personal Family Notice -->
+        <div id="personal-family-notice" class="hidden mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+          <p class="font-semibold text-blue-900 dark:text-blue-100 mb-1">Personal Family</p>
+          <p class="text-sm text-blue-800 dark:text-blue-200">This is your personal family for private transactions only. Members cannot be invited to this family.</p>
+        </div>
+
         <!-- Members Section -->
         <div class="mb-6">
           <div class="flex justify-between items-center mb-3">
@@ -477,6 +483,7 @@
       const API_BASE = "/api";
       let token = localStorage.getItem("token");
       let currentFamilyId = null;
+      let currentFamilyName = null;
 
       if (!token) {
         window.location.href = "/login";
@@ -615,8 +622,9 @@
         });
 
       // Family Details Modal
-      async function openFamilyDetails(familyId) {
+      async function openFamilyDetails(familyId, familyName) {
         currentFamilyId = familyId;
+        currentFamilyName = familyName;
         document
           .getElementById("family-details-modal")
           .classList.remove("hidden");
@@ -624,6 +632,7 @@
           .getElementById("details-modal-backdrop")
           .classList.remove("hidden");
         await loadFamilyDetails(familyId);
+        updateFamilyUIState(familyName);
       }
 
       function closeFamilyDetailsModal() {
@@ -632,6 +641,34 @@
           .getElementById("details-modal-backdrop")
           .classList.add("hidden");
         currentFamilyId = null;
+        currentFamilyName = null;
+      }
+
+      /**
+       * Update UI based on whether it's the Personal family
+       * Hide invite button and delete button, show notice instead
+       */
+      function updateFamilyUIState(familyName) {
+        const isPersonal = familyName && familyName.toLowerCase() === "personal";
+        const inviteBtn = document.getElementById("invite-member-btn");
+        const deleteBtn = document.getElementById("delete-family-btn");
+        const personalNotice = document.getElementById("personal-family-notice");
+
+        if (isPersonal) {
+          // Hide invite button for Personal family
+          inviteBtn.style.display = "none";
+          // Hide delete button for Personal family
+          deleteBtn.style.display = "none";
+          // Show Personal family notice
+          personalNotice.classList.remove("hidden");
+        } else {
+          // Show invite button for other families
+          inviteBtn.style.display = "inline";
+          // Show delete button for other families
+          deleteBtn.style.display = "block";
+          // Hide Personal family notice
+          personalNotice.classList.add("hidden");
+        }
       }
 
       async function loadFamilyDetails(familyId) {
@@ -711,8 +748,10 @@
                   invitesList.appendChild(inviteDiv);
                 });
               } else {
-                membersList.innerHTML =
-                  '<p class="text-sm text-gray-600 dark:text-slate-400">No members yet</p>';
+                if (family.members && family.members.length === 0) {
+                  invitesList.innerHTML =
+                    '<p class="text-sm text-gray-600 dark:text-slate-400">No pending invites</p>';
+                }
               }
             }
           }
@@ -809,7 +848,7 @@
               const familyDiv = document.createElement("div");
               familyDiv.className =
                 "p-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-slate-900/50 cursor-pointer transition-all";
-              familyDiv.onclick = () => openFamilyDetails(family.id);
+              familyDiv.onclick = () => openFamilyDetails(family.id, family.name);
               familyDiv.innerHTML = `
                     <div class="flex justify-between items-start">
                       <div>
